@@ -1,0 +1,15 @@
+# This is the list of people who have agreed to one of the CLAs and can
+# contribute patches to the BUILD File Generator project.
+#
+# The AUTHORS file lists the copyright holders; this file lists people.
+# For example: Google employees are listed here but not in AUTHORS
+# because Google holds the copyright.
+#
+# See the CONTRIBUTING.md file for more details on the CLA.
+#
+# Names are sorted by last name and should be added as:
+#
+#     * Name <email address>
+
+* Petros Eskinder <elpetros@google.com>
+* Carmi Grushko <carmi@google.com>

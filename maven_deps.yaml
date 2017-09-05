@@ -1,0 +1,61 @@
+options:
+  languages: [ "java" ]
+  resolvers:
+    - id: "mavencentral"
+      type: "default"
+      url: https://repo.maven.apache.org/maven2/
+  transitivity: exports
+  versionConflictPolicy: highest
+  thirdPartyDirectory: "thirdparty/jvm"
+
+dependencies:
+  junit:
+    junit:
+      lang: java
+      version: "4.12"
+
+  com.google.guava:
+    guava:
+      version: "23.0"
+      lang: java
+
+  org.mockito:
+    mockito-all:
+      version: "2.0.2-beta"
+      lang: java
+
+  com.google.truth:
+    truth:
+      version: "0.35"
+      lang: java
+
+  com.google.jimfs:
+    jimfs:
+      version: "1.1"
+      lang: java
+
+  args4j:
+    args4j:
+      version: "2.33"
+      lang: java
+
+  com.google.re2j:
+    re2j:
+      version: "1.1"
+      lang: java
+
+  com.google.auto.value:
+    auto-value:
+      version: "1.5"
+      lang: java
+
+  com.google.code.findbugs:
+    jsr305:
+      version: "3.0.2"
+      lang: java
+
+  org.eclipse.jdt:
+    org.eclipse.jdt.core:
+      version: "3.12.3"
+      lang: java
+
