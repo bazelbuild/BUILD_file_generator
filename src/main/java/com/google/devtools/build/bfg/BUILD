@@ -111,10 +111,10 @@ java_binary(
 )
 
 java_library(
-    name = "JadeSourceFileParser",
+    name = "JavaSourceFileParser",
     srcs = [
-        "JadeSourceFileParser.java",
-        "JadeSourceFileParserCli.java",
+        "JavaSourceFileParser.java",
+        "JavaSourceFileParserCli.java",
     ],
     deps = [
         ":ReferencedClassesParser",
@@ -124,9 +124,9 @@ java_library(
 )
 
 java_binary(
-    name = "JadeSourceFileParserCli",
-    main_class = "com.google.devtools.build.bfg.JadeSourceFileParserCli",
-    runtime_deps = [":JadeSourceFileParser"],
+    name = "JavaSourceFileParserCli",
+    main_class = "com.google.devtools.build.bfg.JavaSourceFileParserCli",
+    runtime_deps = [":JavaSourceFileParser"],
 )
 
 java_library(

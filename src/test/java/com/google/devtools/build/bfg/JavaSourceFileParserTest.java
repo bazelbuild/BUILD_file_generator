@@ -35,9 +35,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link JadeSourceFileParser} */
+/** Tests for {@link JavaSourceFileParser} */
 @RunWith(JUnit4.class)
-public class JadeSourceFileParserTest {
+public class JavaSourceFileParserTest {
 
   private Path workspace;
 
@@ -72,7 +72,7 @@ public class JadeSourceFileParserTest {
             "interface ClassA {",
             "  ClassB function();",
             "}");
-    JadeSourceFileParser parser = createParser(file1, file2);
+    JavaSourceFileParser parser = createParser(file1, file2);
 
     ImmutableGraph<String> actual = parser.getClassDependencyGraph();
     MutableGraph<String> expected = newGraph();
@@ -97,7 +97,7 @@ public class JadeSourceFileParserTest {
             "class Dummy {",
             "  Bar methodA() {}",
             "}");
-    JadeSourceFileParser parser = createParser(file1);
+    JavaSourceFileParser parser = createParser(file1);
 
     ImmutableGraph<String> actual = parser.getClassDependencyGraph();
     MutableGraph<String> expected = newGraph();
@@ -119,7 +119,7 @@ public class JadeSourceFileParserTest {
             "  @ThreadSafety.ThreadHostile",
             "  void methodA() {}",
             "}");
-    JadeSourceFileParser parser = createParser(file1);
+    JavaSourceFileParser parser = createParser(file1);
 
     ImmutableGraph<String> actual = parser.getClassDependencyGraph();
     MutableGraph<String> expected = newGraph();
@@ -139,7 +139,7 @@ public class JadeSourceFileParserTest {
             "interface Dummy {",
             "   Foo methodA();",
             "}");
-    JadeSourceFileParser parser = createParser(file1);
+    JavaSourceFileParser parser = createParser(file1);
 
     ImmutableGraph<String> actual = parser.getClassDependencyGraph();
     MutableGraph<String> expected = newGraph();
@@ -154,7 +154,7 @@ public class JadeSourceFileParserTest {
     createSourceFiles(workspace.toString(), "Dummy.java");
     Path file1 =
         writeFile(workspace.resolve("Dummy.java"), "interface Dummy {", "   Foo methodA();", "}");
-    JadeSourceFileParser parser = createParser(file1);
+    JavaSourceFileParser parser = createParser(file1);
 
     ImmutableGraph<String> actual = parser.getClassDependencyGraph();
     MutableGraph<String> expected = newGraph();
@@ -179,7 +179,7 @@ public class JadeSourceFileParserTest {
             "}");
     ImmutableList<Path> contentRoots =
         ImmutableList.of(workspace.resolve("java/"), workspace.resolve("test/"));
-    JadeSourceFileParser parser = createParserWithRoots(contentRoots, file1, testFile);
+    JavaSourceFileParser parser = createParserWithRoots(contentRoots, file1, testFile);
 
     ImmutableGraph<String> actual = parser.getClassDependencyGraph();
     MutableGraph<String> expected = newGraph();
@@ -209,7 +209,7 @@ public class JadeSourceFileParserTest {
             "  }",
             "}");
     ImmutableList<Path> contentRoots = ImmutableList.of(workspace.resolve("java/"));
-    JadeSourceFileParser parser = createParserWithRoots(contentRoots, file1);
+    JavaSourceFileParser parser = createParserWithRoots(contentRoots, file1);
 
     ImmutableGraph<String> actual = parser.getClassDependencyGraph();
     MutableGraph<String> expected = newGraph();
@@ -241,8 +241,8 @@ public class JadeSourceFileParserTest {
     writeFile(workspace.resolve("tests/B.java"), "package tests; class B {}");
 
     ImmutableList<Path> contentRoots = ImmutableList.of(workspace.resolve(""));
-    JadeSourceFileParser parser =
-        new JadeSourceFileParser(
+    JavaSourceFileParser parser =
+        new JavaSourceFileParser(
             ImmutableList.of(
                 workspace.resolve("x/A.java"),
                 workspace.resolve("y/A.java"),
@@ -272,7 +272,7 @@ public class JadeSourceFileParserTest {
   public void tolerateEmptyFiles() throws Exception {
     createSourceFiles("com/hello/", "com/hello/package-info.java");
     Path file = writeFile(workspace.resolve("com/hello/package-info.java"), "package com.hello;");
-    JadeSourceFileParser parser = createParser(file);
+    JavaSourceFileParser parser = createParser(file);
 
     assertThatGraphsEqual(parser.getClassDependencyGraph(), newGraph());
   }
@@ -299,13 +299,13 @@ public class JadeSourceFileParserTest {
     return GraphBuilder.directed().allowsSelfLoops(false).build();
   }
 
-  private JadeSourceFileParser createParser(Path... srcfiles) throws IOException {
+  private JavaSourceFileParser createParser(Path... srcfiles) throws IOException {
     return createParserWithRoots(ImmutableList.of(workspace), srcfiles);
   }
 
-  private static JadeSourceFileParser createParserWithRoots(
+  private static JavaSourceFileParser createParserWithRoots(
       ImmutableList<Path> roots, Path... srcfiles) throws IOException {
-    return new JadeSourceFileParser(
+    return new JavaSourceFileParser(
         ImmutableList.copyOf(srcfiles), roots, ImmutableSet.of() /* oneRulePerPackageRoots */);
   }
 

@@ -39,7 +39,7 @@ import org.kohsuke.args4j.Option;
  * Entry point to BFG java source file parser. Given a list of source files, it prints a graph viz
  * dot file representing the class level dependencies between these source files.
  */
-public class JadeSourceFileParserCli {
+public class JavaSourceFileParserCli {
 
   @Option(
     name = "--roots",
@@ -62,7 +62,7 @@ public class JadeSourceFileParserCli {
   private List<String> sourceFiles = new ArrayList<>();
 
   public static void main(String[] args) throws Exception {
-    new JadeSourceFileParserCli().run(args);
+    new JavaSourceFileParserCli().run(args);
   }
 
   private void run(String[] args) throws Exception {
@@ -93,14 +93,14 @@ public class JadeSourceFileParserCli {
             .map(root -> Paths.get(root))
             .collect(toImmutableSet());
 
-    JadeSourceFileParser parser =
-        new JadeSourceFileParser(sourceFilePaths, contentRoots, oneRulePerPackagePaths);
+    JavaSourceFileParser parser =
+        new JavaSourceFileParser(sourceFilePaths, contentRoots, oneRulePerPackagePaths);
 
     ImmutableGraph<String> classDepsGraph = parser.getClassDependencyGraph();
 
     Set<String> unresolvedClassNames = parser.getUnresolvedClassNames();
     if (!unresolvedClassNames.isEmpty()) {
-      Logger logger = Logger.getLogger(JadeSourceFileParserCli.class.getName());
+      Logger logger = Logger.getLogger(JavaSourceFileParserCli.class.getName());
       logger.warning(
           String.format("Class Names not found %s", Joiner.on("\n\t").join(unresolvedClassNames)));
     }

@@ -99,10 +99,10 @@ java_test(
 )
 
 java_test(
-    name = "JadeSourceFileParserTest",
-    srcs = ["JadeSourceFileParserTest.java"],
+    name = "JavaSourceFileParserTest",
+    srcs = ["JavaSourceFileParserTest.java"],
     deps = [
-        "//src/main/java/com/google/devtools/build/bfg:JadeSourceFileParser",
+        "//src/main/java/com/google/devtools/build/bfg:JavaSourceFileParser",
         "//src/main/java/com/google/devtools/build/bfg:ReferencedClassesParser",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/jimfs",

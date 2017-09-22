@@ -38,7 +38,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /** Given a set of source files, parses the source files and constructs a class dependency graph */
-public class JadeSourceFileParser {
+public class JavaSourceFileParser {
 
   private final ImmutableList<Path> absoluteSourceFilePaths;
 
@@ -59,7 +59,7 @@ public class JadeSourceFileParser {
    * @param oneRulePerPackageRoots Content roots where BFG should generate one-rule-per-package,
    *     instead of one-rule-per-file. See {@link #oneRulePerPackageRoots}.
    */
-  JadeSourceFileParser(
+  JavaSourceFileParser(
       ImmutableList<Path> absoluteSourceFilePaths,
       ImmutableList<Path> contentRoots,
       ImmutableSet<Path> oneRulePerPackageRoots)
