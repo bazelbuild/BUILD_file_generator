@@ -138,7 +138,7 @@ public class Bfg {
         ImmutableList.<ClassToRuleResolver>builder()
             .add(new ProjectClassToRuleResolver(classGraph, whiteList, contentRoots, workspace))
             .add(new UserDefinedResolver(userDefinedMapping));
-    for (String r : Splitter.on(',').split(externalResolvers)) {
+    for (String r : Splitter.on(',').omitEmptyStrings().split(externalResolvers)) {
       resolvers.add(new ExternalResolver(r));
     }
 
