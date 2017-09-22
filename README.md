@@ -1,3 +1,5 @@
+[![Build Status](http://ci.bazel.io/buildStatus/icon?job=BUILD_file_generator)](http://ci.bazel.io/job/BUILD_file_generator)
+
 # BUILD File Generator
 
 BUILD File Generator generates Bazel BUILD files for Java code.
