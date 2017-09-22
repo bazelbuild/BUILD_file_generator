@@ -268,6 +268,15 @@ public class JadeSourceFileParserTest {
     assertThatGraphsEqual(actual, expected);
   }
 
+  @Test
+  public void tolerateEmptyFiles() throws Exception {
+    createSourceFiles("com/hello/", "com/hello/package-info.java");
+    Path file = writeFile(workspace.resolve("com/hello/package-info.java"), "package com.hello;");
+    JadeSourceFileParser parser = createParser(file);
+
+    assertThatGraphsEqual(parser.getClassDependencyGraph(), newGraph());
+  }
+
   private void createSourceFiles(String dir, String... filePaths) throws IOException {
     Files.createDirectories(workspace.resolve(dir));
     for (String filePathString : filePaths) {

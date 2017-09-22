@@ -20,6 +20,7 @@ import static com.google.common.collect.Iterables.getLast;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.readAllBytes;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -91,6 +92,10 @@ public class JadeSourceFileParser {
               new String(readAllBytes(srcFilePath), UTF_8),
               contentRoots);
       checkState(parser.isSuccessful);
+      if (Strings.isNullOrEmpty(parser.fullyQualifiedClassName)) {
+        // The file doesn't contain any classes, skip it. This happens for package-info.java files.
+        continue;
+      }
       String qualifiedSrc = stripInnerClassFromName(parser.fullyQualifiedClassName);
       dirToClass.put(srcFilePath.getParent(), parser.fullyQualifiedClassName);
       for (QualifiedName qualifiedDst : parser.qualifiedTopLevelNames) {
