@@ -15,6 +15,8 @@
 package com.google.devtools.build.bfg;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.getLast;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -60,13 +62,21 @@ public class JavaSourceFileParser {
    *     instead of one-rule-per-file. See {@link #oneRulePerPackageRoots}.
    */
   JavaSourceFileParser(
-      ImmutableList<Path> absoluteSourceFilePaths,
+      ImmutableList<Path> sourceFilePaths,
       ImmutableList<Path> contentRoots,
       ImmutableSet<Path> oneRulePerPackageRoots)
       throws IOException {
-    this.absoluteSourceFilePaths = absoluteSourceFilePaths;
+    this.absoluteSourceFilePaths =
+        sourceFilePaths
+            .stream()
+            .map(p -> p.toAbsolutePath().normalize())
+            .collect(toImmutableList());
     this.contentRoots = contentRoots;
-    this.oneRulePerPackageRoots = oneRulePerPackageRoots;
+    this.oneRulePerPackageRoots =
+        oneRulePerPackageRoots
+            .stream()
+            .map(p -> p.toAbsolutePath().normalize())
+            .collect(toImmutableSet());
     unresolvedClassNames = new HashSet<>();
     classDependencyGraph = createClassDependencyGraph();
   }

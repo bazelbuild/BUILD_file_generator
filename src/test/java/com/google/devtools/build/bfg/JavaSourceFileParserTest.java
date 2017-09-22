@@ -244,14 +244,14 @@ public class JavaSourceFileParserTest {
     JavaSourceFileParser parser =
         new JavaSourceFileParser(
             ImmutableList.of(
-                workspace.resolve("x/A.java"),
-                workspace.resolve("y/A.java"),
-                workspace.resolve("y/B.java"),
-                workspace.resolve("z/A.java"),
-                workspace.resolve("z/B.java"),
-                workspace.resolve("z/C.java"),
-                workspace.resolve("tests/A.java"),
-                workspace.resolve("tests/B.java")),
+                workspace.resolve("./x/A.java"),
+                workspace.resolve("./y/A.java"),
+                workspace.resolve("./y/B.java"),
+                workspace.resolve("./z/A.java"),
+                workspace.resolve("./z/B.java"),
+                workspace.resolve("./z/C.java"),
+                workspace.resolve("./tests/A.java"),
+                workspace.resolve("./tests/B.java")),
             contentRoots,
             ImmutableSet.of(x, y, z) /* oneRulePerPackageRoots */);
     ImmutableGraph<String> actual = parser.getClassDependencyGraph();
