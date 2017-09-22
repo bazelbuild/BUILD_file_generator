@@ -40,3 +40,6 @@ hs_err_pid*
 # Ignore jekyll build output.
 /production
 /.sass-cache
+
+# Ignore mac attributes files
+*.DS_STORE
