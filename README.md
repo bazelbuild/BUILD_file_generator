@@ -9,5 +9,3 @@ BUILD File Generator generates Bazel BUILD files for Java code.
 3. For each component, creates a `java_library` rule.
 
 ## Usage
-
-TODO
