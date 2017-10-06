@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+package com.google.devtools.build.bfg;
+
+option java_package = "protos.com.google.devtools.build.bfg";
+
+// ParserOutput is used to communicate between language-specific parsers and the language-agnostic
+// BFG core.
+message ParserOutput {
+    // The class dependency graph.
+    // In the Java case, we have (u, v) if 'u' mentions [1] 'v'.
+    // [1] - By mention, we mean either imports or references in code, either as a fully qualified
+    //       name, or an implied same-package name.
+    map<string, Strings> class_to_class = 1;
+}
+
+message Strings {
+    repeated string s = 1;
+}

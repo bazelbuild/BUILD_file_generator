@@ -21,13 +21,14 @@ import static com.google.common.collect.Streams.stream;
 import static com.google.devtools.build.bfg.BuildozerCommandCreator.computeBuildozerCommands;
 import static com.google.devtools.build.bfg.BuildozerCommandCreator.getBuildFilesForBuildozer;
 import static com.google.devtools.build.bfg.ClassGraphPreprocessor.preProcessClassGraph;
-import static com.google.devtools.build.bfg.DotFileParser.getDirectedGraphFromDotFile;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.ImmutableGraph;
+import com.google.common.graph.MutableGraph;
 import com.google.re2j.Pattern;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -39,9 +40,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import protos.com.google.devtools.build.bfg.Bfg.ParserOutput;
 
 /** Entry point to the BUILD file generator. */
 public class Bfg {
@@ -107,8 +110,8 @@ public class Bfg {
     CmdLineParser cmdLineParser = new CmdLineParser(this);
     cmdLineParser.parseArgument(args);
 
-    List<String> dotFile = readDotFileFromStdIn();
-    if (dotFile.isEmpty()) {
+    ParserOutput parserOutput = ParserOutput.parseFrom(System.in);
+    if (parserOutput.getClassToClassMap().isEmpty()) {
       explainUsageErrorAndExit(cmdLineParser, "Expected nonempty class graph as input");
     }
     if (whiteListRegex.isEmpty()) {
@@ -118,7 +121,8 @@ public class Bfg {
     Pattern blackList = compilePattern(cmdLineParser, blackListRegex);
 
     ImmutableGraph<String> classGraph =
-        preProcessClassGraph(getDirectedGraphFromDotFile(dotFile), whiteList, blackList);
+        preProcessClassGraph(
+            protoMultimapToGraph(parserOutput.getClassToClassMap()), whiteList, blackList);
 
     ImmutableList<Path> contentRoots =
         stream(Splitter.on(',').split(contentRootPaths))
@@ -146,6 +150,18 @@ public class Bfg {
         new GraphProcessor(classGraph).createBuildRuleDAG(resolvers.build());
 
     executeBuildozerCommands(buildRuleGraph, workspace, isDryRun, buildozerPath);
+  }
+
+  private ImmutableGraph<String> protoMultimapToGraph(
+      Map<String, protos.com.google.devtools.build.bfg.Bfg.Strings> m) {
+    MutableGraph<String> result = GraphBuilder.directed().build();
+    m.forEach(
+        (u, deps) -> {
+          for (String s : deps.getSList()) {
+            result.putEdge(u, s);
+          }
+        });
+    return ImmutableGraph.copyOf(result);
   }
 
   private static Pattern compilePattern(CmdLineParser cmdLineParser, String patternString) {
@@ -199,17 +215,6 @@ public class Bfg {
     } finally {
       Files.delete(tempFile.toPath());
     }
-  }
-
-  /** Reads dot file from stdin. */
-  // TODO(bazel-team): perform some form of error handling
-  private static ImmutableList<String> readDotFileFromStdIn() {
-    Scanner scanner = new Scanner(new BufferedInputStream(System.in), "UTF-8");
-    ImmutableList.Builder<String> result = ImmutableList.builder();
-    while (scanner.hasNextLine()) {
-      result.add(scanner.nextLine());
-    }
-    return result.build();
   }
 
   /**

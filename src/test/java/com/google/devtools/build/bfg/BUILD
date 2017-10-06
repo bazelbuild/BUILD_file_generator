@@ -1,18 +1,6 @@
 licenses(["notice"])  # Apache 2.0
 
 java_test(
-    name = "DotFileParserTest",
-    srcs = ["DotFileParserTest.java"],
-    deps = [
-        "//src/main/java/com/google/devtools/build/bfg:DotFileParser",
-        "//thirdparty/jvm/com/google/guava",
-        "//thirdparty/jvm/com/google/re2j",
-        "//thirdparty/jvm/com/google/truth",
-        "//thirdparty/jvm/junit",
-    ],
-)
-
-java_test(
     name = "GraphProcessorTest",
     srcs = ["GraphProcessorTest.java"],
     deps = [
