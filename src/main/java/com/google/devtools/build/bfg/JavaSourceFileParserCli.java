@@ -117,7 +117,7 @@ public class JavaSourceFileParserCli {
     HashMap<String, Bfg.Strings> result = new HashMap<>();
     for (String u : graph.nodes()) {
       Bfg.Strings.Builder adj = Bfg.Strings.newBuilder();
-      adj.addAllS(graph.adjacentNodes(u));
+      adj.addAllElements(graph.adjacentNodes(u));
       result.put(u, adj.build());
     }
     return result;

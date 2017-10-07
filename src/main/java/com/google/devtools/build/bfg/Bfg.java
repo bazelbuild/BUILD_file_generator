@@ -157,7 +157,7 @@ public class Bfg {
     MutableGraph<String> result = GraphBuilder.directed().build();
     m.forEach(
         (u, deps) -> {
-          for (String s : deps.getSList()) {
+          for (String s : deps.getElementsList()) {
             result.putEdge(u, s);
           }
         });

@@ -15,5 +15,5 @@ message ParserOutput {
 }
 
 message Strings {
-    repeated string s = 1;
+    repeated string elements = 1;
 }
