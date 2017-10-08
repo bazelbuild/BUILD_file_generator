@@ -27,13 +27,16 @@ import com.google.common.graph.ImmutableGraph;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import protos.com.google.devtools.build.bfg.Bfg;
 
 /**
  * Entry point to BFG java source file parser. Given a list of source files, it prints a graph viz
@@ -104,15 +107,19 @@ public class JavaSourceFileParserCli {
       logger.warning(
           String.format("Class Names not found %s", Joiner.on("\n\t").join(unresolvedClassNames)));
     }
-    printDotFileContent(classDepsGraph);
+    Bfg.ParserOutput.Builder result = Bfg.ParserOutput.newBuilder();
+    result.putAllClassToClass(writeGraphToProtoMap(classDepsGraph));
+    result.build().writeTo(System.out);
   }
 
-  /** Given a directed graph, generates the content of desired dot file */
-  private static void printDotFileContent(ImmutableGraph<String> depsGraph) {
-    System.out.println("digraph \"depsgraph\" {");
-    for (EndpointPair<String> edge : depsGraph.edges()) {
-      System.out.printf("\t\"%s\" -> \"%s\";%n", edge.nodeU(), edge.nodeV());
+  private static HashMap<String, Bfg.Strings> writeGraphToProtoMap(
+      ImmutableGraph<String> graph) {
+    HashMap<String, Bfg.Strings> result = new HashMap<>();
+    for (String u : graph.nodes()) {
+      Bfg.Strings.Builder adj = Bfg.Strings.newBuilder();
+      adj.addAllElements(graph.adjacentNodes(u));
+      result.put(u, adj.build());
     }
-    System.out.println("}");
+    return result;
   }
 }

@@ -1,0 +1,2 @@
+# Avoid downloading protobuf twice:
+build --proto_toolchain_for_java="@com_google_protobuf//:java_toolchain"

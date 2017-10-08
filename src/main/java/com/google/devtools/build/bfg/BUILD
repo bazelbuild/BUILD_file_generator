@@ -21,15 +21,6 @@ java_library(
 )
 
 java_library(
-    name = "DotFileParser",
-    srcs = ["DotFileParser.java"],
-    deps = [
-        "//thirdparty/jvm/com/google/guava",
-        "//thirdparty/jvm/com/google/re2j",
-    ],
-)
-
-java_library(
     name = "GraphProcessor",
     srcs = [
         "ClassGraphPreconditions.java",
@@ -94,9 +85,9 @@ java_library(
         ":BuildRule",
         ":BuildozerCommandCreator",
         ":ClassToRuleResolver",
-        ":DotFileParser",
         ":ExternalResolver",
         ":GraphProcessor",
+        ":bfg_java_proto",
         "//thirdparty/jvm/args4j",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/re2j",
@@ -118,6 +109,7 @@ java_library(
     ],
     deps = [
         ":ReferencedClassesParser",
+        ":bfg_java_proto",
         "//thirdparty/jvm/args4j",
         "//thirdparty/jvm/com/google/guava",
     ],
@@ -162,4 +154,14 @@ java_library(
         "//thirdparty/jvm/com/google/errorprone:error_prone_annotations",
         "//thirdparty/jvm/com/google/guava",
     ],
+)
+
+proto_library(
+    name = "bfg_proto",
+    srcs = ["bfg.proto"],
+)
+
+java_proto_library(
+    name = "bfg_java_proto",
+    deps = [":bfg_proto"],
 )
