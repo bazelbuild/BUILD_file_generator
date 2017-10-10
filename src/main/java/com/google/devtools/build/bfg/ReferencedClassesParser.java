@@ -115,6 +115,8 @@ public class ReferencedClassesParser {
    */
   public final ImmutableSet<QualifiedName> qualifiedTopLevelNames;
 
+  public final CompilationUnit compilationUnit;
+
   public ReferencedClassesParser(String filename, String source, Collection<Path> contentRoots) {
     this.compilationMessages = getCompilationMessages(filename, source);
     if (!compilationMessages.isEmpty()) {
@@ -126,10 +128,11 @@ public class ReferencedClassesParser {
       this.superclass = "";
       this.unresolvedClassNames = ImmutableSet.of();
       this.qualifiedTopLevelNames = ImmutableSet.of();
+      this.compilationUnit = null;
       isSuccessful = false;
       return;
     }
-    CompilationUnit compilationUnit = parseAndResolveSource(source);
+    this.compilationUnit = parseAndResolveSource(source);
 
     Visitor visitor = new Visitor(compilationUnit);
     compilationUnit.accept(visitor);

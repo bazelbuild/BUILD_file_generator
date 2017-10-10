@@ -74,7 +74,7 @@ public class JavaSourceFileParserTest {
             "}");
     JavaSourceFileParser parser = createParser(file1, file2);
 
-    ImmutableGraph<String> actual = parser.getClassDependencyGraph();
+    ImmutableGraph<String> actual = parser.getClassToClass();
     MutableGraph<String> expected = newGraph();
     expected.putEdge("com.hello.Dummy", "com.hello.ClassA");
     expected.putEdge("com.hello.Dummy", "org.external.ClassC");
@@ -84,6 +84,20 @@ public class JavaSourceFileParserTest {
 
     assertThatGraphsEqual(actual, expected);
     assertThat(parser.getUnresolvedClassNames()).isEmpty();
+
+    assertThat(parser.getClassToFile())
+        .containsExactly(
+            "com.hello.Dummy",
+            "/src/com/hello/Dummy.java",
+            "com.hello.ClassA",
+            "/src/com/hello/ClassA.java");
+
+    assertThat(parser.getFilesToRuleKind())
+        .containsExactly(
+            "/src/com/hello/Dummy.java",
+            "java_library",
+            "/src/com/hello/ClassA.java",
+            "java_library");
   }
 
   @Test
@@ -99,7 +113,7 @@ public class JavaSourceFileParserTest {
             "}");
     JavaSourceFileParser parser = createParser(file1);
 
-    ImmutableGraph<String> actual = parser.getClassDependencyGraph();
+    ImmutableGraph<String> actual = parser.getClassToClass();
     MutableGraph<String> expected = newGraph();
     expected.putEdge("com.hello.Dummy", "com.google.Foo");
 
@@ -121,7 +135,7 @@ public class JavaSourceFileParserTest {
             "}");
     JavaSourceFileParser parser = createParser(file1);
 
-    ImmutableGraph<String> actual = parser.getClassDependencyGraph();
+    ImmutableGraph<String> actual = parser.getClassToClass();
     MutableGraph<String> expected = newGraph();
     expected.putEdge("com.hello.Dummy", "com.hello.ThreadSafety");
 
@@ -141,7 +155,7 @@ public class JavaSourceFileParserTest {
             "}");
     JavaSourceFileParser parser = createParser(file1);
 
-    ImmutableGraph<String> actual = parser.getClassDependencyGraph();
+    ImmutableGraph<String> actual = parser.getClassToClass();
     MutableGraph<String> expected = newGraph();
     expected.putEdge("Dummy", "com.hello.Foo");
 
@@ -156,7 +170,7 @@ public class JavaSourceFileParserTest {
         writeFile(workspace.resolve("Dummy.java"), "interface Dummy {", "   Foo methodA();", "}");
     JavaSourceFileParser parser = createParser(file1);
 
-    ImmutableGraph<String> actual = parser.getClassDependencyGraph();
+    ImmutableGraph<String> actual = parser.getClassToClass();
     MutableGraph<String> expected = newGraph();
 
     assertThatGraphsEqual(actual, expected);
@@ -181,7 +195,7 @@ public class JavaSourceFileParserTest {
         ImmutableList.of(workspace.resolve("java/"), workspace.resolve("test/"));
     JavaSourceFileParser parser = createParserWithRoots(contentRoots, file1, testFile);
 
-    ImmutableGraph<String> actual = parser.getClassDependencyGraph();
+    ImmutableGraph<String> actual = parser.getClassToClass();
     MutableGraph<String> expected = newGraph();
     expected.putEdge("com.hello.DummyTest", "com.hello.Dummy");
 
@@ -211,7 +225,7 @@ public class JavaSourceFileParserTest {
     ImmutableList<Path> contentRoots = ImmutableList.of(workspace.resolve("java/"));
     JavaSourceFileParser parser = createParserWithRoots(contentRoots, file1);
 
-    ImmutableGraph<String> actual = parser.getClassDependencyGraph();
+    ImmutableGraph<String> actual = parser.getClassToClass();
     MutableGraph<String> expected = newGraph();
     expected.putEdge("com.hello.Dummy", "com.google.common.collect.ImmutableList");
     expected.putEdge("com.hello.Dummy", "a.b.c.D");
@@ -254,7 +268,7 @@ public class JavaSourceFileParserTest {
                 workspace.resolve("./tests/B.java")),
             contentRoots,
             ImmutableSet.of(x, y, z) /* oneRulePerPackageRoots */);
-    ImmutableGraph<String> actual = parser.getClassDependencyGraph();
+    ImmutableGraph<String> actual = parser.getClassToClass();
 
     MutableGraph<String> expected = newGraph();
     expected.putEdge("y.A", "y.B");
@@ -274,7 +288,47 @@ public class JavaSourceFileParserTest {
     Path file = writeFile(workspace.resolve("com/hello/package-info.java"), "package com.hello;");
     JavaSourceFileParser parser = createParser(file);
 
-    assertThatGraphsEqual(parser.getClassDependencyGraph(), newGraph());
+    assertThatGraphsEqual(parser.getClassToClass(), newGraph());
+  }
+
+  @Test
+  public void ruleKindDetection() throws Exception {
+    createSourceFiles("x/", "x/Binary.java", "x/SomeTest.java", "x/AbstractTest.java");
+    Path file1 =
+        writeFile(
+            workspace.resolve("x/Binary.java"),
+            "package com.hello;",
+            "class Binary {",
+            "  public static void main(String[] args) { }",
+            "}");
+    Path file2 =
+        writeFile(
+            workspace.resolve("x/SomeTest.java"),
+            "package com.hello;",
+            "class SomeTest {",
+            "  @org.junit.Test",
+            "  void testSomething() {}",
+            "}");
+    Path file3 =
+        writeFile(
+            workspace.resolve("x/AbstractTest.java"),
+            "package com.hello;",
+            "abstract class AbstractTest {",
+            "  @org.junit.Test",
+            "  abstract void testSomething() {}",
+            "}");
+    JavaSourceFileParser parser = createParser(file1, file2, file3);
+
+    assertThat(parser.getFilesToRuleKind())
+        .containsExactly(
+            // Binary.java has a static method named 'main' with a single String[] parameter.
+            "/src/x/Binary.java",
+            "java_binary",
+            "/src/x/SomeTest.java",
+            "java_test",
+            // AbstractTest is abstract, so must be a java_library.
+            "/src/x/AbstractTest.java",
+            "java_library");
   }
 
   private void createSourceFiles(String dir, String... filePaths) throws IOException {
