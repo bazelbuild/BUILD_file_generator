@@ -102,8 +102,10 @@ public class BuildozerCommandCreatorTest {
     MutableGraph<BuildRule> buildRuleGraph = newGraph();
     String packagePath = "/workspace/java/package";
     ProjectBuildRule src = newProjectBuildRule(packagePath, "/workspace/java/package/Example.java");
-    ProjectBuildRule dstOne = newProjectBuildRule(packagePath, "/workspace/java/package/Other.java");
-    ProjectBuildRule dstTwo = newProjectBuildRule(packagePath, "/workspace/java/package/Hello.java");
+    ProjectBuildRule dstOne =
+        newProjectBuildRule(packagePath, "/workspace/java/package/Other.java");
+    ProjectBuildRule dstTwo =
+        newProjectBuildRule(packagePath, "/workspace/java/package/Hello.java");
 
     buildRuleGraph.putEdge(src, dstOne);
     buildRuleGraph.putEdge(src, dstTwo);

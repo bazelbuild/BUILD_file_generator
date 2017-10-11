@@ -16,8 +16,6 @@ package com.google.devtools.build.bfg;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.Streams.stream;
 import static com.google.devtools.build.bfg.BuildozerCommandCreator.computeBuildozerCommands;
 import static com.google.devtools.build.bfg.BuildozerCommandCreator.getBuildFilesForBuildozer;
 import static com.google.devtools.build.bfg.ClassGraphPreprocessor.preProcessClassGraph;
@@ -26,11 +24,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.MutableGraph;
 import com.google.re2j.Pattern;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -39,9 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import protos.com.google.devtools.build.bfg.Bfg.ParserOutput;
@@ -51,14 +47,6 @@ public class Bfg {
 
   @Option(name = "--buildozer", usage = "Path to the Buildozer binary")
   private String buildozerPath = "/usr/bin/buildozer";
-
-  @Option(
-    name = "--roots",
-    usage =
-        "Comma-separated list of paths where the source/test files reside, "
-            + "relative to the WORKSPACE file."
-  )
-  private String contentRootPaths = "src/main/java/,src/test/java/";
 
   @Option(
     name = "--dry_run",
@@ -123,11 +111,8 @@ public class Bfg {
     ImmutableGraph<String> classGraph =
         preProcessClassGraph(
             protoMultimapToGraph(parserOutput.getClassToClassMap()), whiteList, blackList);
-
-    ImmutableList<Path> contentRoots =
-        stream(Splitter.on(',').split(contentRootPaths))
-            .map(root -> Paths.get(root))
-            .collect(toImmutableList());
+    ImmutableMap<String, Path> classToFiles =
+        protoMultimapToPathsMap(parserOutput.getClassToFileMap());
 
     Path workspace = Paths.get(workspacePath);
 
@@ -140,7 +125,7 @@ public class Bfg {
 
     ImmutableList.Builder<ClassToRuleResolver> resolvers =
         ImmutableList.<ClassToRuleResolver>builder()
-            .add(new ProjectClassToRuleResolver(classGraph, whiteList, contentRoots, workspace))
+            .add(new ProjectClassToRuleResolver(classGraph, whiteList, classToFiles, workspace))
             .add(new UserDefinedResolver(userDefinedMapping));
     for (String r : Splitter.on(',').omitEmptyStrings().split(externalResolvers)) {
       resolvers.add(new ExternalResolver(r));
@@ -150,6 +135,23 @@ public class Bfg {
         new GraphProcessor(classGraph).createBuildRuleDAG(resolvers.build());
 
     executeBuildozerCommands(buildRuleGraph, workspace, isDryRun, buildozerPath);
+  }
+
+  private ImmutableMap<String, Path> protoMultimapToPathsMap(
+      Map<String, protos.com.google.devtools.build.bfg.Bfg.Strings> classToFileMap) {
+    ImmutableMap.Builder<String, Path> result = ImmutableMap.builder();
+    classToFileMap.forEach(
+        (classname, filenames) -> {
+          checkState(
+              filenames.getElementsList().size() == 1,
+              "BFG currently only supports a single file per class, got %s --> %s",
+              classname,
+              filenames);
+          for (String s : filenames.getElementsList()) {
+            result.put(classname, Paths.get(s));
+          }
+        });
+    return result.build();
   }
 
   private ImmutableGraph<String> protoMultimapToGraph(

@@ -14,13 +14,11 @@
 
 package com.google.devtools.build.bfg;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.devtools.build.bfg.ProjectClassToRuleResolver.UNRESOLVED_THRESHOLD;
 import static junit.framework.TestCase.fail;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.graph.Graph;
@@ -32,7 +30,6 @@ import com.google.common.jimfs.Jimfs;
 import com.google.re2j.Pattern;
 import java.io.IOException;
 import java.nio.file.FileSystem;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import org.junit.Before;
@@ -52,7 +49,6 @@ public class ProjectClassToRuleResolverTest {
   public void setUp() throws IOException {
     FileSystem fileSystem = createDefaultFileSystem();
     workspace = fileSystem.getPath("/src");
-    Files.createDirectories(workspace.resolve("java/com/"));
   }
 
   /**
@@ -64,9 +60,18 @@ public class ProjectClassToRuleResolverTest {
     MutableGraph<String> classgraph = newGraph(String.class);
     classgraph.putEdge("com.A", "com.B");
     classgraph.putEdge("com.B", "com.C");
-    writeFiles("java/com/A.java", "java/com/B.java", "java/com/C.java");
 
-    ProjectClassToRuleResolver resolver = newResolver(classgraph, WHITELIST_DEFAULT, "java/");
+    ProjectClassToRuleResolver resolver =
+        newResolver(
+            classgraph,
+            WHITELIST_DEFAULT,
+            ImmutableMap.of(
+                "com.A",
+                workspace.resolve("java/com/A.java"),
+                "com.B",
+                workspace.resolve("java/com/B.java"),
+                "com.C",
+                workspace.resolve("java/com/C.java")));
 
     ImmutableMap<String, BuildRule> actual = resolver.resolve(classgraph.nodes());
 
@@ -88,9 +93,15 @@ public class ProjectClassToRuleResolverTest {
     MutableGraph<String> classgraph = newGraph(String.class);
     classgraph.putEdge("com.A", "com.B");
 
-    writeFiles("java/com/A.java", "java/com/B.java");
-
-    ProjectClassToRuleResolver resolver = newResolver(classgraph, WHITELIST_DEFAULT, "java/");
+    ProjectClassToRuleResolver resolver =
+        newResolver(
+            classgraph,
+            WHITELIST_DEFAULT,
+            ImmutableMap.of(
+                "com.A",
+                workspace.resolve("java/com/A.java"),
+                "com.B",
+                workspace.resolve("java/com/B.java")));
 
     ImmutableMap<String, BuildRule> actual = resolver.resolve(ImmutableSet.of("com.A"));
 
@@ -110,9 +121,17 @@ public class ProjectClassToRuleResolverTest {
     classgraph.putEdge("com.B", "com.C");
     classgraph.putEdge("com.C", "com.A");
 
-    writeFiles("java/com/A.java", "java/com/B.java", "java/com/C.java");
-
-    ProjectClassToRuleResolver resolver = newResolver(classgraph, WHITELIST_DEFAULT, "java/");
+    ProjectClassToRuleResolver resolver =
+        newResolver(
+            classgraph,
+            WHITELIST_DEFAULT,
+            ImmutableMap.of(
+                "com.A",
+                workspace.resolve("java/com/A.java"),
+                "com.B",
+                workspace.resolve("java/com/B.java"),
+                "com.C",
+                workspace.resolve("java/com/C.java")));
 
     ImmutableMap<String, BuildRule> actual = resolver.resolve(classgraph.nodes());
     assertThat(actual).containsKey("com.A");
@@ -130,7 +149,7 @@ public class ProjectClassToRuleResolverTest {
     classgraph.putEdge("com.A$hello", "com.B");
 
     try {
-      newResolver(classgraph, WHITELIST_DEFAULT, "java/");
+      newResolver(classgraph, WHITELIST_DEFAULT, ImmutableMap.of());
       fail("Expected an exception, but nothing was thrown.");
     } catch (IllegalStateException e) {
       assertThat(e)
@@ -150,10 +169,17 @@ public class ProjectClassToRuleResolverTest {
     classgraph.putEdge("com.A", "com.B");
     classgraph.putEdge("com.B", "com.C");
 
-    writeFiles("java/com/A.java", "java/com/B.java", "java/com/C.java");
-
     ProjectClassToRuleResolver resolver =
-        newResolver(classgraph, Pattern.compile("com.hello.*"), "java/");
+        newResolver(
+            classgraph,
+            Pattern.compile("com.hello.*"),
+            ImmutableMap.of(
+                "com.A",
+                workspace.resolve("java/com/A.java"),
+                "com.B",
+                workspace.resolve("java/com/B.java"),
+                "com.C",
+                workspace.resolve("java/com/C.java")));
 
     ImmutableMap<String, BuildRule> actual = resolver.resolve(classgraph.nodes());
     assertThat(actual).isEmpty();
@@ -168,9 +194,11 @@ public class ProjectClassToRuleResolverTest {
     MutableGraph<String> classgraph = newGraph(String.class);
     classgraph.putEdge("com.A", "com.DoesNotExist");
 
-    writeFiles("java/com/A.java");
-
-    ProjectClassToRuleResolver resolver = newResolver(classgraph, WHITELIST_DEFAULT, "java/");
+    ProjectClassToRuleResolver resolver =
+        newResolver(
+            classgraph,
+            WHITELIST_DEFAULT,
+            ImmutableMap.of("com.A", workspace.resolve("java/com/A.java")));
     ImmutableMap<String, BuildRule> actual = resolver.resolve(classgraph.nodes());
     assertThat(actual)
         .containsExactly("com.A", buildRule("/src/java/com/", "/src/java/com/A.java"));
@@ -188,9 +216,11 @@ public class ProjectClassToRuleResolverTest {
     classgraph.putEdge("com.A", "com.DoesNotExistTwo");
     classgraph.putEdge("com.A", "com.DoesNotExistThree");
 
-    writeFiles("java/com/A.java");
-
-    ProjectClassToRuleResolver resolver = newResolver(classgraph, WHITELIST_DEFAULT, "java/");
+    ProjectClassToRuleResolver resolver =
+        newResolver(
+            classgraph,
+            WHITELIST_DEFAULT,
+            ImmutableMap.of("com.A", workspace.resolve("java/com/A.java")));
 
     try {
       resolver.resolve(classgraph.nodes());
@@ -208,11 +238,9 @@ public class ProjectClassToRuleResolverTest {
 
   /** Constructs a ProjectClassToRuleResolver using default workspace path and arguments */
   private ProjectClassToRuleResolver newResolver(
-      Graph<String> classGraph, Pattern whiteList, String... roots) {
-    ImmutableList<Path> rootPaths =
-        Arrays.stream(roots).map(root -> workspace.resolve(root)).collect(toImmutableList());
+      Graph<String> classGraph, Pattern whiteList, ImmutableMap<String, Path> classToFile) {
     return new ProjectClassToRuleResolver(
-        ImmutableGraph.copyOf(classGraph), whiteList, rootPaths, workspace);
+        ImmutableGraph.copyOf(classGraph), whiteList, classToFile, workspace);
   }
 
   /** Constructs a ProjectBuildRule using default workspace path */
@@ -224,13 +252,6 @@ public class ProjectClassToRuleResolverTest {
             .collect(toImmutableSet());
 
     return new ProjectBuildRule(srcFiles, packagePath, workspace);
-  }
-
-  /** Creates file on the given virtual system and returns the path object for said source file. */
-  private void writeFiles(String... filePaths) throws IOException {
-    for (String filePath : filePaths) {
-      Files.createFile(workspace.resolve(filePath));
-    }
   }
 
   private static FileSystem createDefaultFileSystem() {

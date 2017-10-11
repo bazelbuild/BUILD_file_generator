@@ -29,7 +29,6 @@ java_library(
         "ClassToSourceGraphConsolidator.java",
         "GraphProcessor.java",
         "ProjectClassToRuleResolver.java",
-        "SourceFileResolver.java",
         "UserDefinedResolver.java",
     ],
     deps = [

@@ -21,13 +21,11 @@ import static com.google.common.collect.Streams.stream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.graph.ImmutableGraph;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -104,32 +102,31 @@ public class JavaSourceFileParserCli {
       logger.warning(
           String.format("Class Names not found %s", Joiner.on("\n\t").join(unresolvedClassNames)));
     }
+
+    // Write results to stdout.
+    serializeResults(parser).writeTo(System.out);
+  }
+
+  private Bfg.ParserOutput serializeResults(JavaSourceFileParser parser) {
     Bfg.ParserOutput.Builder result = Bfg.ParserOutput.newBuilder();
-    result.putAllClassToClass(graphToProtoMap(parser.getClassToClass()));
-    result.putAllClassToFile(mapToProtoMap(parser.getClassToFile()));
-    result.putAllFileToRuleKind(mapToProtoMap(parser.getFilesToRuleKind()));
-    result.build().writeTo(System.out);
-  }
 
-  private static HashMap<String, Bfg.Strings> graphToProtoMap(
-      ImmutableGraph<String> graph) {
-    HashMap<String, Bfg.Strings> result = new HashMap<>();
-    for (String u : graph.nodes()) {
-      Bfg.Strings.Builder adj = Bfg.Strings.newBuilder();
-      adj.addAllElements(graph.adjacentNodes(u));
-      result.put(u, adj.build());
+    // classToClass
+    ImmutableGraph<String> classToClass = parser.getClassToClass();
+    for (String u : classToClass.nodes()) {
+      result.putClassToClass(
+          u, Bfg.Strings.newBuilder().addAllElements(classToClass.adjacentNodes(u)).build());
     }
-    return result;
-  }
 
-  private static HashMap<String, Bfg.Strings> mapToProtoMap(
-      ImmutableMap<String, String> map) {
-    HashMap<String, Bfg.Strings> result = new HashMap<>();
-    map.forEach((k, v) -> {
-      Bfg.Strings.Builder values = Bfg.Strings.newBuilder();
-      values.addElements(v);
-      result.put(k, values.build());
-    });
-    return result;
+    // classToFile
+    parser
+        .getClassToFile()
+        .forEach(
+            (classname, filename) ->
+                result.putClassToFile(
+                    classname, Bfg.Strings.newBuilder().addElements(filename).build()));
+
+    // fileToRuleKind
+    result.putAllFileToRuleKind(parser.getFilesToRuleKind());
+    return result.build();
   }
 }
