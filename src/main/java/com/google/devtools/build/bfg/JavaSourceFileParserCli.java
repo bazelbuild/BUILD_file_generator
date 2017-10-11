@@ -21,15 +21,14 @@ import static com.google.common.collect.Streams.stream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.graph.EndpointPair;
 import com.google.common.graph.ImmutableGraph;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import org.kohsuke.args4j.Argument;
@@ -99,8 +98,6 @@ public class JavaSourceFileParserCli {
     JavaSourceFileParser parser =
         new JavaSourceFileParser(sourceFilePaths, contentRoots, oneRulePerPackagePaths);
 
-    ImmutableGraph<String> classDepsGraph = parser.getClassDependencyGraph();
-
     Set<String> unresolvedClassNames = parser.getUnresolvedClassNames();
     if (!unresolvedClassNames.isEmpty()) {
       Logger logger = Logger.getLogger(JavaSourceFileParserCli.class.getName());
@@ -108,11 +105,13 @@ public class JavaSourceFileParserCli {
           String.format("Class Names not found %s", Joiner.on("\n\t").join(unresolvedClassNames)));
     }
     Bfg.ParserOutput.Builder result = Bfg.ParserOutput.newBuilder();
-    result.putAllClassToClass(writeGraphToProtoMap(classDepsGraph));
+    result.putAllClassToClass(graphToProtoMap(parser.getClassToClass()));
+    result.putAllClassToFile(mapToProtoMap(parser.getClassToFile()));
+    result.putAllFileToRuleKind(mapToProtoMap(parser.getFilesToRuleKind()));
     result.build().writeTo(System.out);
   }
 
-  private static HashMap<String, Bfg.Strings> writeGraphToProtoMap(
+  private static HashMap<String, Bfg.Strings> graphToProtoMap(
       ImmutableGraph<String> graph) {
     HashMap<String, Bfg.Strings> result = new HashMap<>();
     for (String u : graph.nodes()) {
@@ -120,6 +119,17 @@ public class JavaSourceFileParserCli {
       adj.addAllElements(graph.adjacentNodes(u));
       result.put(u, adj.build());
     }
+    return result;
+  }
+
+  private static HashMap<String, Bfg.Strings> mapToProtoMap(
+      ImmutableMap<String, String> map) {
+    HashMap<String, Bfg.Strings> result = new HashMap<>();
+    map.forEach((k, v) -> {
+      Bfg.Strings.Builder values = Bfg.Strings.newBuilder();
+      values.addElements(v);
+      result.put(k, values.build());
+    });
     return result;
   }
 }
