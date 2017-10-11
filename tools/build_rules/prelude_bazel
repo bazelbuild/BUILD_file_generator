@@ -1,0 +1,2 @@
+load("@//tools/build_rules:java.bzl", "java_library")
+
