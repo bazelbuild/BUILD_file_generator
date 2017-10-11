@@ -18,7 +18,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.collect.Iterables.any;
-import static com.google.common.collect.Iterables.filter;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -42,12 +41,13 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Type;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -110,15 +110,23 @@ public class JavaSourceFileParser {
             .stream()
             .map(p -> p.toAbsolutePath().normalize())
             .collect(toImmutableSet());
-    unresolvedClassNames = new HashSet<>();
 
+    ImmutableSet.Builder<String> unresolvedClassNames = ImmutableSet.builder();
     MutableGraph<String> classToClass = GraphBuilder.directed().allowsSelfLoops(false).build();
     ImmutableMap.Builder<String, String> classToFile = ImmutableMap.builder();
     ImmutableMap.Builder<String, String> filesToRuleKind = ImmutableMap.builder();
-    createClassDependencyGraph(classToClass, classToFile, filesToRuleKind);
+    parseFiles(
+        absoluteSourceFilePaths,
+        contentRoots,
+        oneRulePerPackageRoots,
+        unresolvedClassNames,
+        classToClass,
+        classToFile,
+        filesToRuleKind);
     this.classToClass = ImmutableGraph.copyOf(classToClass);
     this.classToFile = classToFile.build();
     this.filesToRuleKind = filesToRuleKind.build();
+    this.unresolvedClassNames = unresolvedClassNames.build();
   }
 
   /** Set of classes that we could not determine a fully qualified name for */
@@ -156,7 +164,11 @@ public class JavaSourceFileParser {
   }
 
   /** Given a list of source files, creates a graph of their class level dependencies */
-  private void createClassDependencyGraph(
+  private static void parseFiles(
+      ImmutableList<Path> absoluteSourceFilePaths,
+      ImmutableList<Path> contentRoots,
+      ImmutableSet<Path> oneRulePerPackageRoots,
+      ImmutableSet.Builder<String> unresolvedClassNames,
       MutableGraph<String> classToClass,
       ImmutableMap.Builder<String, String> classToFile,
       ImmutableMap.Builder<String, String> fileToRuleKind)
@@ -175,22 +187,24 @@ public class JavaSourceFileParser {
       }
       String qualifiedSrc = stripInnerClassFromName(parser.fullyQualifiedClassName);
       dirToClass.put(srcFilePath.getParent(), parser.fullyQualifiedClassName);
-      HashSet<String> adj = new HashSet<>();
+
+      boolean hasEdges = false;
       classToFile.put(qualifiedSrc, srcFilePath.toString());
       for (QualifiedName qualifiedDst : parser.qualifiedTopLevelNames) {
         if (!qualifiedSrc.equals(qualifiedDst.value())) {
-          adj.add(qualifiedDst.value());
+          classToClass.putEdge(qualifiedSrc, qualifiedDst.value());
+          hasEdges = true;
         }
-      }
-      for (String v : adj) {
-        classToClass.putEdge(qualifiedSrc, v);
       }
 
       for (SimpleName name : parser.unresolvedClassNames) {
         unresolvedClassNames.add(name.value());
       }
 
-      fileToRuleKind.put(srcFilePath.toString(), decideRuleKind(parser, adj));
+      fileToRuleKind.put(
+          srcFilePath.toString(),
+          decideRuleKind(
+              parser, hasEdges ? classToClass.adjacentNodes(qualifiedSrc) : ImmutableSet.of()));
     }
 
     // Put classes defined in 'oneRulePerPackageRoots' on cycles.
@@ -204,7 +218,7 @@ public class JavaSourceFileParser {
             });
   }
 
-  private String decideRuleKind(ReferencedClassesParser parser, Set<String> dependencies) {
+  private static String decideRuleKind(ReferencedClassesParser parser, Set<String> dependencies) {
     CompilationUnit cu = parser.compilationUnit;
     if (cu.types().isEmpty()) {
       return "java_library";
@@ -220,28 +234,54 @@ public class JavaSourceFileParser {
       return "java_test";
     }
 
-    for (MethodDeclaration m : filter(topLevelClass.bodyDeclarations(), MethodDeclaration.class)) {
-      if ((m.getModifiers() & Modifier.STATIC) != 0
-          && "main".equals(m.getName().getIdentifier())
-          && m.parameters().size() == 1) {
-        SingleVariableDeclaration pt =
-            getOnlyElement((List<SingleVariableDeclaration>) m.parameters());
-        IVariableBinding vb = pt.resolveBinding();
-        if (vb == null) {
-          continue;
-        }
-        ITypeBinding tb = vb.getType();
-        if (tb != null && "java.lang.String[]".equals(tb.getQualifiedName())) {
-          return "java_binary";
-        }
-      }
+    if (any(
+        topLevelClass.bodyDeclarations(),
+        d -> d instanceof MethodDeclaration && isMainMethod((MethodDeclaration) d))) {
+      return "java_binary";
     }
 
     return "java_library";
   }
 
+  /**
+   * Returns true iff 'methodDeclaration' represents a void static method named 'main' that takes a
+   * single String[] parameter.
+   */
+  private static boolean isMainMethod(MethodDeclaration methodDeclaration) {
+    // Is it static?
+    if ((methodDeclaration.getModifiers() & Modifier.STATIC) == 0) {
+      return false;
+    }
+    // Does it return void?
+    Type returnType = methodDeclaration.getReturnType2();
+    if (!returnType.isPrimitiveType()) {
+      return false;
+    }
+    if (((PrimitiveType) returnType).getPrimitiveTypeCode() != PrimitiveType.VOID) {
+      return false;
+    }
+    // Is it called 'main'?
+    if (!"main".equals(methodDeclaration.getName().getIdentifier())) {
+      return false;
+    }
+    // Does it have a single parameter?
+    if (methodDeclaration.parameters().size() != 1) {
+      return false;
+    }
+
+    // Is the parameter's type String[]?
+    SingleVariableDeclaration pt =
+        getOnlyElement((List<SingleVariableDeclaration>) methodDeclaration.parameters());
+    IVariableBinding vb = pt.resolveBinding();
+    if (vb == null) {
+      return false;
+    }
+    ITypeBinding tb = vb.getType();
+    return tb != null && "java.lang.String[]".equals(tb.getQualifiedName());
+  }
+
   /** Create a cycle in 'graph' comprised of classes from 'classes'. */
-  private void putOnCycle(Collection<String> classes, MutableGraph<String> graph) {
+  private static void putOnCycle(Collection<String> classes, MutableGraph<String> graph) {
     if (classes.size() == 1) {
       return;
     }
