@@ -12,6 +12,14 @@ message ParserOutput {
     // [1] - By mention, we mean either imports or references in code, either as a fully qualified
     //       name, or an implied same-package name.
     map<string, Strings> class_to_class = 1;
+
+    // Maps a class name to the file that defines it.
+    // Paths are expected to be absolute.
+    map<string, Strings> class_to_file = 2;
+
+    // Maps a file name to the Bazel rule kind (e.g., java_library) that should be used to build it.
+    // Paths are expected to be absolute.
+    map<string, Strings> file_to_rule_kind = 3;
 }
 
 message Strings {

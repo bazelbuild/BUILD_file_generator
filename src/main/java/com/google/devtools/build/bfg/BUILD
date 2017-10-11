@@ -112,6 +112,7 @@ java_library(
         ":bfg_java_proto",
         "//thirdparty/jvm/args4j",
         "//thirdparty/jvm/com/google/guava",
+        "//thirdparty/jvm/org/eclipse/jdt:org_eclipse_jdt_core",
     ],
 )
 
