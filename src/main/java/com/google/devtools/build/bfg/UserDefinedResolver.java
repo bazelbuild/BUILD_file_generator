@@ -36,7 +36,7 @@ public class UserDefinedResolver implements ClassToRuleResolver {
   }
 
   /**
-   * Takes in a path to a file where each line consists of a "classname //target." Then uses this to
+   * Takes in a path to a file where each line consists of a "classname,//target." Then uses this to
    * construct a map between classnames and targets.
    *
    * <p>If the path is empty, then it returns an empty map.
