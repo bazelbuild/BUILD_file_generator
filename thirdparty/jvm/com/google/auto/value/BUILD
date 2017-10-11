@@ -1,8 +1,6 @@
 java_library(
     name = "auto_value",
-    exported_plugins = [
-        ":auto_value_plugin",
-    ],
+    exported_plugins = [":auto_value_plugin"],
     visibility = [
         "//visibility:public",
     ],
@@ -14,7 +12,5 @@ java_library(
 java_plugin(
     name = "auto_value_plugin",
     processor_class = "com.google.auto.value.processor.AutoValueProcessor",
-    deps = [
-        "//external:jar/com/google/auto/value/auto_value",
-    ],
+    deps = ["//external:jar/com/google/auto/value/auto_value"],
 )
