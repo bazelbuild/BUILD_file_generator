@@ -138,7 +138,9 @@ public class ProjectBuildRuleTest {
   public void ruleWithFilesInChildrenSubdirectories() {
     ProjectBuildRule actual =
         newBuildRule(
-            "/workspace/package/", "/workspace/package/Hello.java", "/workspace/package/src/Other.java");
+            "/workspace/package/",
+            "/workspace/package/Hello.java",
+            "/workspace/package/src/Other.java");
 
     assertThat(actual.label()).matches(Pattern.compile("//package:JavaBuildRule\\w+"));
 

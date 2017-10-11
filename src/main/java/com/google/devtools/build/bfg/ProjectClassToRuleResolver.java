@@ -19,9 +19,9 @@ import static com.google.devtools.build.bfg.ClassGraphPreconditions.checkNoInner
 import static com.google.devtools.build.bfg.ProjectBuildRuleUtilities.mapDirectoriesToPackages;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.graph.Graph;
 import com.google.common.graph.Graphs;
@@ -36,15 +36,16 @@ import java.util.logging.Logger;
 /** Maps top level class names to rules. */
 class ProjectClassToRuleResolver implements ClassToRuleResolver {
 
-  private final ImmutableGraph<String> classGraph;
+  private final Logger logger = Logger.getLogger(ProjectBuildRule.class.getName());
 
-  private final ImmutableList<Path> contentRoots;
+  private final ImmutableGraph<String> classGraph;
 
   private final Pattern whiteList;
 
   private final Path workspace;
 
-  private final Logger logger = Logger.getLogger(ProjectBuildRule.class.getName());
+  /** Maps each class name to the file it's defined in. */
+  private final ImmutableMap<String, Path> classToFile;
 
   /** The maximum percentage of classes that can be unresolved before BFG errors out. */
   static final double UNRESOLVED_THRESHOLD = 0.7;
@@ -52,10 +53,10 @@ class ProjectClassToRuleResolver implements ClassToRuleResolver {
   ProjectClassToRuleResolver(
       ImmutableGraph<String> classGraph,
       Pattern whiteList,
-      ImmutableList<Path> contentRoots,
+      ImmutableMap<String, Path> classToFile,
       Path workspace) {
     checkNoInnerClassesPresent(classGraph.nodes());
-    this.contentRoots = contentRoots;
+    this.classToFile = classToFile;
     this.workspace = workspace;
     this.classGraph = classGraph;
     this.whiteList = whiteList;
@@ -66,8 +67,8 @@ class ProjectClassToRuleResolver implements ClassToRuleResolver {
     ImmutableSet<String> projectClasses =
         classes.stream().filter(name -> whiteList.matcher(name).find()).collect(toImmutableSet());
 
-    ImmutableMap<String, Path> classToSrcFileMap =
-        SourceFileResolver.resolve(projectClasses, contentRoots);
+    Map<String, Path> classToSrcFileMap =
+        Maps.filterKeys(classToFile, k -> projectClasses.contains(k));
 
     handleUnresolvedClasses(projectClasses, classToSrcFileMap.keySet());
 
@@ -111,7 +112,7 @@ class ProjectClassToRuleResolver implements ClassToRuleResolver {
    * IllegalStateException.
    */
   private void handleUnresolvedClasses(
-      ImmutableSet<String> projectClasses, ImmutableSet<String> resolvedClasses) {
+      ImmutableSet<String> projectClasses, Set<String> resolvedClasses) {
     Set<String> unresolvedClasses = Sets.difference(projectClasses, resolvedClasses);
     if (unresolvedClasses.isEmpty() || projectClasses.isEmpty()) {
       return;

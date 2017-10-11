@@ -35,6 +35,11 @@ import com.google.common.graph.MutableGraph;
 import com.google.devtools.build.bfg.ReferencedClassesParser.Metadata;
 import com.google.devtools.build.bfg.ReferencedClassesParser.QualifiedName;
 import com.google.devtools.build.bfg.ReferencedClassesParser.SimpleName;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -44,12 +49,6 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 
 /** Given a set of source files, parses the source files and constructs a class dependency graph */
 public class JavaSourceFileParser {

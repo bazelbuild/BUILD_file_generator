@@ -26,18 +26,6 @@ java_test(
 )
 
 java_test(
-    name = "SourceFileResolverTest",
-    srcs = ["SourceFileResolverTest.java"],
-    deps = [
-        "//src/main/java/com/google/devtools/build/bfg:GraphProcessor",
-        "//thirdparty/jvm/com/google/guava",
-        "//thirdparty/jvm/com/google/jimfs",
-        "//thirdparty/jvm/com/google/truth",
-        "//thirdparty/jvm/junit",
-    ],
-)
-
-java_test(
     name = "BuildozerCommandCreatorTest",
     srcs = ["BuildozerCommandCreatorTest.java"],
     deps = [
