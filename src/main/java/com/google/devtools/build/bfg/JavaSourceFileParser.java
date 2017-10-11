@@ -43,9 +43,7 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.Type;
 
-import javax.naming.directory.Attribute;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
