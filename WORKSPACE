@@ -1,7 +1,5 @@
 load("//thirdparty:workspace.bzl", "maven_dependencies")
-load("//thirdparty:load.bzl", "declare_maven")
-
-maven_dependencies(declare_maven)
+maven_dependencies()
 
 # Provide dependencies for proto_library and java_proto_library rules.
 http_archive(
