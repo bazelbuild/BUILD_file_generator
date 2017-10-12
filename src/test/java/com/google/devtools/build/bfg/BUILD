@@ -75,19 +75,6 @@ java_test(
 )
 
 java_test(
-    name = "JavaSourceFileParserTest",
-    srcs = ["JavaSourceFileParserTest.java"],
-    deps = [
-        "//src/main/java/com/google/devtools/build/bfg:JavaSourceFileParser",
-        "//src/main/java/com/google/devtools/build/bfg:ReferencedClassesParser",
-        "//thirdparty/jvm/com/google/guava",
-        "//thirdparty/jvm/com/google/jimfs",
-        "//thirdparty/jvm/com/google/truth",
-        "//thirdparty/jvm/junit",
-    ],
-)
-
-java_test(
     name = "ClassNameUtilitiesTest",
     srcs = ["ClassNameUtilitiesTest.java"],
     deps = [
@@ -133,16 +120,3 @@ java_test(
     ],
 )
 
-java_test(
-    name = "ReferencedClassesParserTest",
-    size = "small",
-    srcs = ["ReferencedClassesParserTest.java"],
-    deps = [
-        "//src/main/java/com/google/devtools/build/bfg:ReferencedClassesParser",
-        "//thirdparty/jvm/com/google/guava",
-        "//thirdparty/jvm/com/google/jimfs",
-        "//thirdparty/jvm/com/google/truth",
-        "//thirdparty/jvm/junit",
-        "//thirdparty/jvm/org/eclipse/jdt:org_eclipse_jdt_core",
-    ],
-)
