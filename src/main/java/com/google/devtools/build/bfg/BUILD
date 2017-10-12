@@ -6,21 +6,6 @@ package(default_visibility = [
 ])
 
 java_library(
-    name = "ReferencedClassesParser",
-    srcs = ["ReferencedClassesParser.java"],
-    visibility = [
-        "//src/test/java/com/google/devtools/build/bfg:__subpackages__",
-    ],
-    deps = [
-        "//thirdparty/jvm/com/google/auto/value:auto_value",
-        "//thirdparty/jvm/com/google/code/findbugs:jsr305",
-        "//thirdparty/jvm/com/google/errorprone:error_prone_annotations",
-        "//thirdparty/jvm/com/google/guava",
-        "//thirdparty/jvm/org/eclipse/jdt:org_eclipse_jdt_core",
-    ],
-)
-
-java_library(
     name = "GraphProcessor",
     srcs = [
         "ClassGraphPreconditions.java",
@@ -101,27 +86,6 @@ java_binary(
 )
 
 java_library(
-    name = "JavaSourceFileParser",
-    srcs = [
-        "JavaSourceFileParser.java",
-        "JavaSourceFileParserCli.java",
-    ],
-    deps = [
-        ":ReferencedClassesParser",
-        ":bfg_java_proto",
-        "//thirdparty/jvm/args4j",
-        "//thirdparty/jvm/com/google/guava",
-        "//thirdparty/jvm/org/eclipse/jdt:org_eclipse_jdt_core",
-    ],
-)
-
-java_binary(
-    name = "JavaSourceFileParserCli",
-    main_class = "com.google.devtools.build.bfg.JavaSourceFileParserCli",
-    runtime_deps = [":JavaSourceFileParser"],
-)
-
-java_library(
     name = "ExternalResolver",
     srcs = ["ExternalResolver.java"],
     deps = [
@@ -164,4 +128,5 @@ proto_library(
 java_proto_library(
     name = "bfg_java_proto",
     deps = [":bfg_proto"],
+    visibility = ["//visibility:public"],
 )
