@@ -21,6 +21,16 @@ git reset --hard ${BAZEL_DEPS_VERSION}
 
 bazel build src/scala/com/github/johnynek/bazel_deps:parseproject_deploy.jar
 
+# TODO(https://github.com/bazelbuild/bazel/issues/3895): Drop once issue is fixed.
+# Install buildozer and buildifier if not installed
+for tool in buildozer buildifier; do
+    if ! command -v "${tool}" >/dev/null 2>&1; then
+        echo >&2 "${tool} is missing; attempting to install via go get."
+        command -v go > /dev/null 2>&1 || { echo >&2 "go is not installed. please install go and retry."; exit 1; }
+        go get github.com/bazelbuild/buildtools/"${tool}";
+    fi
+done
+
 generate_and_format() {
     cd "${ROOT_DIR}"
     # TODO format-deps removes the copyright, otherwise this is nice for consistency
