@@ -28,12 +28,14 @@ generate_and_format() {
 
     "$BAZEL_DEPS_DIR/gen_maven_deps.sh" generate --repo-root "$ROOT_DIR" --sha-file "thirdparty/workspace.bzl" --deps maven_deps.yaml
 
+    # TODO(https://github.com/johnynek/bazel-deps/issues/62): Drop once issue is fixed.
     # Manually add the AutoValue plugin. Otherwise, everything can be auto-generated from the YAML.
     buildozer 'add exported_plugins :auto_value_plugin' //thirdparty/jvm/com/google/auto/value:auto_value
     buildozer 'new java_plugin auto_value_plugin' //thirdparty/jvm/com/google/auto/value:auto_value
     buildozer 'set processor_class com.google.auto.value.processor.AutoValueProcessor' //thirdparty/jvm/com/google/auto/value:auto_value_plugin
     buildozer 'add deps //external:jar/com/google/auto/value/auto_value' //thirdparty/jvm/com/google/auto/value:auto_value_plugin
 
+    # TODO(https://github.com/johnynek/bazel-deps/issues/73): Drop once issue is fixed.
     # The generated BUILD files are not well-formatted. Run the buildifier on them.
     find "${ROOT_DIR}/thirdparty/jvm" -name "BUILD" -exec "buildifier" -showlog -mode=fix {} +
 }
