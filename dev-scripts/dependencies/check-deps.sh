@@ -2,6 +2,7 @@
 #
 # Wrapper script around bazel-deps to generate third_party files, and check if they differ from what's at HEAD.  Exits 0
 # if they match, non-zero otherwise.
+# TODO(https://github.com/johnynek/bazel-deps/issues/85): Drop once issue is fixed.
 
 set -eu
 
