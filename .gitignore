@@ -43,3 +43,5 @@ hs_err_pid*
 
 # Ignore mac attributes files
 *.DS_STORE
+# Ignore bazel-deps resolverCache. See: https://github.com/johnynek/bazel-deps#options
+target/local-repo
