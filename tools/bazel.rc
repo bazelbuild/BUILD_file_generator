@@ -1,2 +1,6 @@
 # Avoid downloading protobuf twice:
 build --proto_toolchain_for_java="@com_google_protobuf//:java_toolchain"
+# Run with a persistent scalac worker. See: https://github.com/bazelbuild/rules_scala#getting-started
+build --strategy=Scalac=worker
+test --strategy=Scalac=worker
+
