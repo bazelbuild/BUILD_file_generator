@@ -33,7 +33,7 @@ run `add-dep.sh` with a new version of an existing dependency, it will be update
 in `maven_deps.yaml` and any changed indirect dependencies will be reflected in
 the generated files.
 
-You can also edit `dependencies.yaml` manually. You will need to do this to
+You can also edit `maven_deps.yaml` manually. You will need to do this to
 remove a dependency, or to add exclusions to a dependency's dependencies. After
 making changes, run `./dev-scripts/dependencies/generate.sh` to rebuild the
 generated files, and commit the changes to the generated files.
