@@ -1,2 +1,5 @@
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_test")
 load("@//tools/bazel_defs:java.bzl", "java_library")
+
+# TODO(https://github.com/johnynek/bazel-deps/issues/86): Drop once issue is fixed.
+# Needed for `scala_library` rules in `thirdparty/jvm`.
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
