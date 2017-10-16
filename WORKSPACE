@@ -1,5 +1,5 @@
 load("//thirdparty:workspace.bzl", "maven_dependencies")
-load("//tools/bazel_defs:workspace.bzl", "declare_maven")
+load("//tools/bazel_defs:declare_maven.bzl", "declare_maven")
 maven_dependencies(declare_maven)
 
 # Provide dependencies for proto_library and java_proto_library rules.
