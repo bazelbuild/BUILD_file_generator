@@ -38,7 +38,7 @@ import protos.com.google.devtools.build.bfg.Bfg;
 /**
  * Entry point to the BFG java source file parser. Given a list of source files, 
  * it obtains the class and file level dependencies between the files, generates a
- * dependency graph, and outputs this graph as a protobuff.
+ * dependency graph, and outputs this graph as a protobuf.
  */
 public class JavaSourceFileParserCli {
 

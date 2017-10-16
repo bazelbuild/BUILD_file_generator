@@ -12,16 +12,16 @@ Bazel promises fast and correct builds, _especially_ for incremental builds. Rat
 
 There is one caveat to this fast incremental performance, though. It is dependent on the granularity of your targets. At one extreme, the least granular end, you can define a single glob for your entire project. This would be the quickest way to get your project using Bazel. However, it comes at the cost of eradicating any of Bazel's incremental build performance. On the other end, you can try to manually define the most granular targets possible, a single rule per file, collapsing any cyclic dependencies into the same target. This would ensure you make use of Bazel's blazingly fast incremental builds. However, it is extremely tedious, and somewhat annoying to maintain.
 
-BFG automates this difficult tango. 
+BFG automates this difficult tango.
 
 ## Usage
 
-BFG is composed of two general components 
+BFG is composed of two general components
 
-1. Language specific parsers (LSP) 
+1. Language specific parsers (LSP)
 2. The BFG binary
 
-The LSPs read your source code and generate a class dependency graph in the form of a protobuff. To generate your BUILD files, you pass the generated protobuff into the BFG binary. 
+The LSPs read your source code and generate a class dependency graph in the form of a protobuf. To generate your BUILD files, you pass the generated protobuf into the BFG binary.
 
 ### Step 0: Installation Instructions
 
@@ -29,13 +29,13 @@ To install BFG...TODO
 
 ### Step 1: Using LSPs to generate dependency graphs
 
-TODO(bazel-devel): add explanation and valid example arguments. 
+TODO(bazel-devel): add explanation and valid example arguments.
 
 ```bash
 bazel run //lang:JavaSourceFileParserCli <TODO>
 ```
 
-This generates a protobuff at TODO.
+This generates a protobuf at TODO.
 TODO(bazel-devel): add clear protocol for how the protos are structured. Useful for other developers who may want to write LSPs.
 
 ### Step 2: Generating BUILD files using BFG binary
@@ -48,13 +48,13 @@ bazel run //src:bfg <TODO>
 
 ### Supported Languages
 
-We currently support Java projects. The next language on our roadmap is Scala. 
+We currently support Java projects. The next language on our roadmap is Scala.
 
 ## Development
 
-### Contributing 
+### Contributing
 
-We welcome contributions! We generally prefer contributions that either (1) add features by extending BFG to other languages, (2) fix existing bugs, or (3) present bugs through the use of example projects.  
+We welcome contributions! We generally prefer contributions that either (1) add features by extending BFG to other languages, (2) fix existing bugs, or (3) present bugs through the use of example projects.
 
 ### Dependency Management
 

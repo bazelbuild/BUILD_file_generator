@@ -10,3 +10,4 @@ java_binary(
 	stamp = 1,
 	runtime_deps = ["//src/main/java/com/google/devtools/build/bfg:Bfg"],
 )
+
