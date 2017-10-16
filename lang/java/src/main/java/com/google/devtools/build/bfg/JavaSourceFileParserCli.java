@@ -36,8 +36,9 @@ import org.kohsuke.args4j.Option;
 import protos.com.google.devtools.build.bfg.Bfg;
 
 /**
- * Entry point to BFG java source file parser. Given a list of source files, it prints a graph viz
- * dot file representing the class level dependencies between these source files.
+ * Entry point to the BFG java source file parser. Given a list of source files, 
+ * it obtains the class and file level dependencies between the files, generates a
+ * dependency graph, and outputs this graph as a protobuff.
  */
 public class JavaSourceFileParserCli {
 
@@ -73,7 +74,8 @@ public class JavaSourceFileParserCli {
     } catch (CmdLineException e) {
       if (sourceFiles.isEmpty()) {
         System.err.println("Must provide file names to parse.");
-      } else {
+		//TODO(bazel-team) print example usage of the class
+	  } else {
         System.err.println(e.getMessage());
       }
       e.getParser().printUsage(System.err);
