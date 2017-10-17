@@ -13,7 +13,7 @@
 # limitations under the License.
 
 options:
-  languages: [ "java" ]
+  languages: [ "java", "scala:2.11" ]
   resolvers:
     - id: "mavencentral"
       type: "default"
@@ -73,3 +73,19 @@ dependencies:
       version: "3.12.3"
       lang: java
 
+  org.scala-lang:
+    scala-library:
+      version: "2.11.11"
+      lang: scala/unmangled
+
+  org.scalactic:
+    scalactic:
+      lang: scala
+      version: "3.0.4"
+
+  org.scalatest:
+    scalatest:
+      exports:
+        - "org.scalactic:scalactic"
+      lang: scala
+      version: "3.0.4"

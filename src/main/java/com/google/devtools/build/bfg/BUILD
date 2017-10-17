@@ -123,6 +123,7 @@ java_library(
 proto_library(
     name = "bfg_proto",
     srcs = ["bfg.proto"],
+    visibility = ["//visibility:public"],
 )
 
 java_proto_library(
