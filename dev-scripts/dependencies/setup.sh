@@ -6,14 +6,15 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 BAZEL_DEPS_DIR="$ROOT_DIR/../bazel-deps"
 # Pin a specific version of bazel-deps; change this to upgrade:
-BAZEL_DEPS_VERSION="4ac70de70f9ba3fd61f1d9ede7729c4fc63a31b7"
+BAZEL_DEPS_VERSION="aee756519d7b86aa3a36141f147a3839fb0639ea"
 
 if [ -d "$BAZEL_DEPS_DIR" ]
 then
     cd "$BAZEL_DEPS_DIR"
     git fetch origin master
 else
-    git clone https://github.com/johnynek/bazel-deps.git "$BAZEL_DEPS_DIR"
+    # TODO(https://github.com/johnynek/bazel-deps/pulls): revert to johnynek/bazel-deps when fixed.
+    git clone https://github.com/greggdonovan/bazel-deps.git "$BAZEL_DEPS_DIR"
 fi
 
 cd "$BAZEL_DEPS_DIR"
