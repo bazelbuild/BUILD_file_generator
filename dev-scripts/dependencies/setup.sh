@@ -7,7 +7,7 @@ ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 # TODO(https://github.com/bazelbuild/bazel/issues/1673): move bazel-deps to a WORKSPACE rule.
 BAZEL_DEPS_DIR="$ROOT_DIR/../BUILD_file_generator-bazel-deps"
 # Pin a specific version of bazel-deps; change this to upgrade:
-BAZEL_DEPS_VERSION="4ac70de70f9ba3fd61f1d9ede7729c4fc63a31b7"
+BAZEL_DEPS_VERSION="7d89b39e8b9c1a0b5a1481909c56c39d970e59b1"
 
 if [ -d "$BAZEL_DEPS_DIR" ]
 then
