@@ -63,9 +63,11 @@ JAVACOPTS = [
 ]
 
 def java_library(javacopts=[], **kwargs):
+    updated_opts = []
+    updated_opts += javacopts
     if native.repository_name() == '@':
         # When building any java target in our repository (i.e. not ones that are loaded into the WORKSPACE with
         # http_archive and friends), apply our javac options.  We don't apply them to external code because that code
         # may not adhere to our rules.
-        javacopts += JAVACOPTS
-    native.java_library(javacopts=javacopts, **kwargs)
+        updated_opts += JAVACOPTS
+    native.java_library(javacopts=updated_opts, **kwargs)
