@@ -62,6 +62,7 @@ dependencies:
     auto-value:
       version: "1.5"
       lang: java
+      processorClasses: ["com.google.auto.value.processor.AutoValueProcessor"]
 
   com.google.code.findbugs:
     jsr305:
