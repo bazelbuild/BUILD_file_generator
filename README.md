@@ -12,6 +12,12 @@ BUILD File Generator generates Bazel BUILD files for Java code.
 
 TODO
 
+## Decoding Language-Specific Parser Output
+
+```bash
+protoc --decode com.google.devtools.build.bfg.ParserOutput src/main/java/com/google/devtools/build/bfg/bfg.proto < ${LANG_SPECIFIC_PARSER_OUTPUT_FILE}
+```
+
 ## Adding or updating third-party dependencies
 
 We use a third-party tool called [bazel-deps](https://github.com/johnynek/bazel-deps)

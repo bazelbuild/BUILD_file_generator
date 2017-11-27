@@ -24,8 +24,9 @@ java_library(
         "JavaSourceFileParserCli.java",
     ],
     deps = [
-        ":ReferencedClassesParser",
+        ":ReferencedClassesParser",        
         "//src/main/java/com/google/devtools/build/bfg:bfg_java_proto",
+        "//src/main/java/com/google/devtools/build/bfg:TargetInfoUtilities",        
         "//thirdparty/jvm/args4j",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/org/eclipse/jdt:org_eclipse_jdt_core",

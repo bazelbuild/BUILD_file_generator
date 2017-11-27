@@ -17,9 +17,17 @@ message ParserOutput {
     // Paths are expected to be absolute.
     map<string, Strings> class_to_file = 2;
 
-    // Maps a file name to the Bazel rule kind (e.g., java_library) that should be used to build it.
-    // Paths are expected to be absolute.
-    map<string, string> file_to_rule_kind = 3;
+    // Maps a file name to the Bazel rule kind (e.g., java_library) and Buildozer command fragments
+    // that should be used to build it. Paths are expected to be absolute.
+    // The buildozer_commands supply all of the info that Bfg will not deduce from the graph of classes and files.
+    // e.g. for a java_binary we need the main class.
+    map<string, TargetInfo> file_to_target_info = 3;
+}
+
+
+message TargetInfo {
+    required string rule_kind = 1;
+    optional Strings buildozer_commands = 2;
 }
 
 message Strings {

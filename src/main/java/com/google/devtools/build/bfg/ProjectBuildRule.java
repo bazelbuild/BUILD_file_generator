@@ -20,18 +20,25 @@ import static java.util.stream.Collectors.joining;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.common.hash.HashFunction;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import protos.com.google.devtools.build.bfg.Bfg.Strings;
+import protos.com.google.devtools.build.bfg.Bfg.TargetInfo;
 
 final class ProjectBuildRule implements BuildRule {
 
-  /** Strongly connected component of source files. */
-  private final ImmutableSet<Path> srcFiles;
+  /** Strongly connected component of source files with their target info. */
+  private final ImmutableMap<Path, TargetInfo> srcFilesToTargetInfo;
 
   /** List of buildozer commands (sans add deps) to generate for this build rule */
   private final List<String> buildozerCommands;
@@ -53,8 +60,8 @@ final class ProjectBuildRule implements BuildRule {
   private final Path packagePath;
 
   // Assumes that all src file paths are absolute
-  ProjectBuildRule(ImmutableSet<Path> srcFiles, Path packagePath, Path workspacePath) {
-    this.srcFiles = srcFiles;
+  ProjectBuildRule(ImmutableMap<Path, TargetInfo> srcFilesToTargetInfo, Path packagePath, Path workspacePath) {
+    this.srcFilesToTargetInfo = srcFilesToTargetInfo;
     this.workspacePath = workspacePath;
     this.packagePath = packagePath;
     targetName = createTargetName();
@@ -81,9 +88,12 @@ final class ProjectBuildRule implements BuildRule {
    * Creates the "new rule" command and "add srcs" command, then returns them as a list of strings
    */
   private List<String> createBuildozerCommands() {
-    return ImmutableList.of(
-        BuildozerCommand.newRule(guessRuleType(), targetName, createPackageName(packagePath)),
-        BuildozerCommand.addAttribute("srcs", createSrcsAttribute(), ruleLabel));
+    TargetInfo merged = mergeTargets(srcFilesToTargetInfo.values());
+    return ImmutableList.<String>builder()
+        .add(BuildozerCommand.newRule(merged.getRuleKind(), targetName, createPackageName(packagePath)))
+        .add(BuildozerCommand.addAttribute("srcs", createSrcsAttribute(), ruleLabel))
+        .addAll(merged.getBuildozerCommands().getElementsList().stream().map(cmd -> BuildozerCommand.addFragment(cmd, ruleLabel)).collect(Collectors.toSet()))
+        .build();
   }
 
   /**
@@ -91,11 +101,11 @@ final class ProjectBuildRule implements BuildRule {
    * to other targets in the same package.
    */
   private String createTargetName() {
-    if (srcFiles.size() == 1) {
-      return createTargetNameForSingleFile(srcFiles.iterator().next());
+    if (srcFilesToTargetInfo.size() == 1) {
+      return createTargetNameForSingleFile(Iterables.getOnlyElement(srcFilesToTargetInfo.keySet()));
     }
     String combinedName =
-        srcFiles.stream().map(src -> src.getFileName().toString()).collect(joining(""));
+        srcFilesToTargetInfo.keySet().stream().map(src -> src.getFileName().toString()).collect(joining(""));
     return "JavaBuildRule_" + HASH_FUNCTION.hashUnencodedChars(combinedName).toString();
   }
 
@@ -117,14 +127,42 @@ final class ProjectBuildRule implements BuildRule {
     return workspacePath.relativize(buildFilePath).toString();
   }
 
+  private static TargetInfo mergeTargets(Collection<TargetInfo> targetInfos) {
+    String ruleKind = guessRuleType(targetInfos);
+    Strings.Builder cmds = Strings.newBuilder();
+    targetInfos.forEach(ti -> cmds.mergeFrom(ti.getBuildozerCommands()));
+    return TargetInfo.newBuilder().setRuleKind(ruleKind).setBuildozerCommands(cmds).build();
+  }
+
   /**
-   * Guesses the type of a rule using extremely crude heuristics. If the rule contains at least one
-   * source file containing the substring Test.java, then we guess that it is a java_test
+   * Guesses the type of a rule using extremely crude heuristics.
+   * <ul>
+   * <li>If the component contains only one type of rule, we use that.</li>
+   * <li>If the set of rule kinds contains <pre>[rule-prefix]_library</pre> and <pre>[rule-prefix]_test</pre>,
+   * we use <pre>[rule_prefix]_test</pre>. </li>
+   * <li>If the set of rule kinds contains <pre>[rule-prefix]_library</pre> and <pre>[rule-prefix]_binary</pre>, we use
+   * <pre>[rule_prefix]_binary</pre>.</li>
+   *
+   * If none of those match, we error out (for now).
+   * </ul>
    */
-  private String guessRuleType() {
-    return (srcFiles.stream().anyMatch(path -> path.toString().endsWith("Test.java")))
-        ? "java_test"
-        : "java_library";
+  private static String guessRuleType(Collection<TargetInfo> targetInfos) {
+    ImmutableSet<String> ruleKinds = ImmutableSet.copyOf(targetInfos.stream().map(ti -> ti.getRuleKind()).collect(Collectors.toSet()));
+    if (ruleKinds.size() == 1) {
+      return Iterables.getOnlyElement(ruleKinds);
+    }
+    Set<String> ruleKindPrefixes = ruleKinds.stream().map(rk -> rk.substring(0, rk.indexOf('_'))).collect(Collectors.toSet());
+    if (ruleKindPrefixes.size() != 1) {
+      throw new IllegalArgumentException("Different rule kind prefixes in a single component. targetInfos=" + targetInfos);
+    }
+    Set<String> ruleKindSuffixes = ruleKinds.stream().map(rk -> rk.substring(rk.indexOf('_') + 1)).collect(Collectors.toSet());
+    if (ImmutableSet.of("library", "test").equals(ruleKindSuffixes)) {
+      return Iterables.getOnlyElement(ruleKindPrefixes) + "_test";
+    }
+    if (ImmutableSet.of("library", "binary").equals(ruleKindSuffixes)) {
+      return Iterables.getOnlyElement(ruleKindPrefixes) + "_binary";
+    }
+    throw new IllegalArgumentException("Unable to determine rule kind to use. targetInfos=" + targetInfos);
   }
 
   /**
@@ -134,11 +172,11 @@ final class ProjectBuildRule implements BuildRule {
    * directory. Otherwise, a runtime exception is thrown.
    */
   private ImmutableList<String> createSrcsAttribute() {
-    if (!hasAllFilesInOneDirectory(srcFiles)) {
-      String files = Joiner.on("\n\t").join(srcFiles);
+    if (!hasAllFilesInOneDirectory(srcFilesToTargetInfo.keySet())) {
+      String files = Joiner.on("\n\t").join(srcFilesToTargetInfo.keySet());
       logger.warning("ಠ_ಠ All files in component are not in the same root directory:\n\t" + files);
     }
-    return srcFiles
+    return srcFilesToTargetInfo.keySet()
         .stream()
         .map(srcFile -> packagePath.relativize(srcFile).toString())
         .sorted()
@@ -163,12 +201,12 @@ final class ProjectBuildRule implements BuildRule {
       return true;
     }
     ProjectBuildRule other = (ProjectBuildRule) o;
-    return workspacePath.equals(other.workspacePath) && srcFiles.equals(other.srcFiles);
+    return workspacePath.equals(other.workspacePath) && srcFilesToTargetInfo.equals(other.srcFilesToTargetInfo);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(workspacePath, srcFiles);
+    return Objects.hash(workspacePath, srcFilesToTargetInfo);
   }
 
   @Override

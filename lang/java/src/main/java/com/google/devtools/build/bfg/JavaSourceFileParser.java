@@ -23,7 +23,6 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.readAllBytes;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,6 +48,7 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.PrimitiveType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
+import protos.com.google.devtools.build.bfg.Bfg.TargetInfo;
 
 /** Given a set of source files, parses the source files and constructs a class dependency graph */
 public class JavaSourceFileParser {
@@ -80,7 +80,7 @@ public class JavaSourceFileParser {
    *
    * <p>E.g., "src/main/java/com/FooTest.java" -> "java_test".
    */
-  private final ImmutableMap<String, String> filesToRuleKind;
+  private final ImmutableMap<String, TargetInfo> fileToTargetInfo;
 
   /**
    * Content roots where BFG should generate one-rule-per-package, instead of one-rule-per-file. For
@@ -113,7 +113,7 @@ public class JavaSourceFileParser {
     ImmutableSet.Builder<String> unresolvedClassNames = ImmutableSet.builder();
     MutableGraph<String> classToClass = GraphBuilder.directed().allowsSelfLoops(false).build();
     ImmutableMap.Builder<String, String> classToFile = ImmutableMap.builder();
-    ImmutableMap.Builder<String, String> filesToRuleKind = ImmutableMap.builder();
+    ImmutableMap.Builder<String, TargetInfo> fileToTargetInfo = ImmutableMap.builder();
     parseFiles(
         absoluteSourceFilePaths,
         contentRoots,
@@ -121,10 +121,10 @@ public class JavaSourceFileParser {
         unresolvedClassNames,
         classToClass,
         classToFile,
-        filesToRuleKind);
+        fileToTargetInfo);
     this.classToClass = ImmutableGraph.copyOf(classToClass);
     this.classToFile = classToFile.build();
-    this.filesToRuleKind = filesToRuleKind.build();
+    this.fileToTargetInfo = fileToTargetInfo.build();
     this.unresolvedClassNames = unresolvedClassNames.build();
   }
 
@@ -158,8 +158,8 @@ public class JavaSourceFileParser {
    *
    * <p>E.g., "src/main/java/com/FooTest.java" -> "java_test".
    */
-  public ImmutableMap<String, String> getFilesToRuleKind() {
-    return filesToRuleKind;
+  public ImmutableMap<String, TargetInfo> getFileToTargetInfo() {
+    return fileToTargetInfo;
   }
 
   /** Given a list of source files, creates a graph of their class level dependencies */
@@ -170,7 +170,7 @@ public class JavaSourceFileParser {
       ImmutableSet.Builder<String> unresolvedClassNames,
       MutableGraph<String> classToClass,
       ImmutableMap.Builder<String, String> classToFile,
-      ImmutableMap.Builder<String, String> fileToRuleKind)
+      ImmutableMap.Builder<String, TargetInfo> fileToTargetInfo)
       throws IOException {
     HashMultimap<Path, String> dirToClass = HashMultimap.create();
     for (Path srcFilePath : absoluteSourceFilePaths) {
@@ -180,7 +180,7 @@ public class JavaSourceFileParser {
               new String(readAllBytes(srcFilePath), UTF_8),
               contentRoots);
       checkState(parser.isSuccessful);
-      if (Strings.isNullOrEmpty(parser.fullyQualifiedClassName)) {
+      if (com.google.common.base.Strings.isNullOrEmpty(parser.fullyQualifiedClassName)) {
         // The file doesn't contain any classes, skip it. This happens for package-info.java files.
         continue;
       }
@@ -189,6 +189,7 @@ public class JavaSourceFileParser {
 
       boolean hasEdges = false;
       classToFile.put(qualifiedSrc, srcFilePath.toString());
+      classToClass.addNode(qualifiedSrc);
       for (QualifiedName qualifiedDst : parser.qualifiedTopLevelNames) {
         if (!qualifiedSrc.equals(qualifiedDst.value())) {
           classToClass.putEdge(qualifiedSrc, qualifiedDst.value());
@@ -200,9 +201,9 @@ public class JavaSourceFileParser {
         unresolvedClassNames.add(name.value());
       }
 
-      fileToRuleKind.put(
+      fileToTargetInfo.put(
           srcFilePath.toString(),
-          decideRuleKind(
+          extrractTargetInfo(
               parser, hasEdges ? classToClass.adjacentNodes(qualifiedSrc) : ImmutableSet.of()));
     }
 
@@ -217,29 +218,29 @@ public class JavaSourceFileParser {
             });
   }
 
-  private static String decideRuleKind(ReferencedClassesParser parser, Set<String> dependencies) {
+  private static TargetInfo extrractTargetInfo(ReferencedClassesParser parser, Set<String> dependencies) {
     CompilationUnit cu = parser.compilationUnit;
     if (cu.types().isEmpty()) {
-      return "java_library";
+      return TargetInfoUtilities.javaLibrary();
     }
     AbstractTypeDeclaration topLevelClass = (AbstractTypeDeclaration) cu.types().get(0);
     if ((topLevelClass.getModifiers() & Modifier.ABSTRACT) != 0) {
       // Class is abstract, can't be a test.
-      return "java_library";
+      return TargetInfoUtilities.javaLibrary();
     }
 
     // JUnit 4 tests
     if (parser.className.endsWith("Test") && dependencies.contains("org.junit.Test")) {
-      return "java_test";
+      return TargetInfoUtilities.javaTest();
     }
 
     if (any(
         topLevelClass.bodyDeclarations(),
         d -> d instanceof MethodDeclaration && isMainMethod((MethodDeclaration) d))) {
-      return "java_binary";
+      return TargetInfoUtilities.javaBinary(parser.fullyQualifiedClassName);
     }
 
-    return "java_library";
+    return TargetInfoUtilities.javaLibrary();
   }
 
   /**

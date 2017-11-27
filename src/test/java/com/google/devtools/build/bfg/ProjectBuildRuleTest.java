@@ -14,18 +14,18 @@
 
 package com.google.devtools.build.bfg;
 
-import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import protos.com.google.devtools.build.bfg.Bfg.TargetInfo;
 
 /** Tests for {@link ProjectBuildRule}. */
 @RunWith(JUnit4.class)
@@ -36,7 +36,7 @@ public class ProjectBuildRuleTest {
   @Test
   public void singleFileLibraryRule() {
     ProjectBuildRule actual =
-        newBuildRule("/workspace/java/package/", "/workspace/java/package/Example.java");
+        newBuildRule("/workspace/java/package/", ImmutableMap.of("/workspace/java/package/Example.java", TargetInfoUtilities.javaLibrary()));
 
     assertThat(actual.label()).isEqualTo("//java/package:Example");
     assertThat(actual.getCreatingBuildozerCommands())
@@ -53,7 +53,7 @@ public class ProjectBuildRuleTest {
   @Test
   public void collapsedSingleFileRule() {
     ProjectBuildRule actual =
-        newBuildRule("/workspace/java/package/", "/workspace/java/package/hi/Example.java");
+        newBuildRule("/workspace/java/package/", ImmutableMap.of("/workspace/java/package/hi/Example.java", TargetInfoUtilities.javaLibrary()));
 
     assertThat(actual.label()).isEqualTo("//java/package:hi-Example");
     assertThat(actual.getCreatingBuildozerCommands())
@@ -72,8 +72,8 @@ public class ProjectBuildRuleTest {
     ProjectBuildRule actual =
         newBuildRule(
             "/workspace/java/package/",
-            "/workspace/java/package/Example.java",
-            "/workspace/java/package/Other.java");
+            ImmutableMap.of("/workspace/java/package/Example.java", TargetInfoUtilities.javaLibrary(),
+            "/workspace/java/package/Other.java", TargetInfoUtilities.javaLibrary()));
 
     assertThat(actual.label()).matches(Pattern.compile("//java/package:JavaBuildRule\\w+"));
 
@@ -94,7 +94,7 @@ public class ProjectBuildRuleTest {
   @Test
   public void guessTestRule_singleFileTestRule() {
     ProjectBuildRule actual =
-        newBuildRule("/workspace/java/package/", "/workspace/java/package/ExampleTest.java");
+        newBuildRule("/workspace/java/package/", ImmutableMap.of("/workspace/java/package/ExampleTest.java", TargetInfoUtilities.javaTest()));
 
     assertThat(actual.label()).isEqualTo("//java/package:ExampleTest");
     assertThat(actual.getCreatingBuildozerCommands())
@@ -112,8 +112,8 @@ public class ProjectBuildRuleTest {
     ProjectBuildRule actual =
         newBuildRule(
             "/workspace/java/package/",
-            "/workspace/java/package/SomeTest.java",
-            "/workspace/java/package/Other.java");
+            ImmutableMap.of("/workspace/java/package/SomeTest.java", TargetInfoUtilities.javaTest(),
+            "/workspace/java/package/Other.java", TargetInfoUtilities.javaLibrary()));
 
     assertThat(actual.label()).matches(Pattern.compile("//java/package:JavaBuildRule\\w+"));
 
@@ -139,8 +139,8 @@ public class ProjectBuildRuleTest {
     ProjectBuildRule actual =
         newBuildRule(
             "/workspace/package/",
-            "/workspace/package/Hello.java",
-            "/workspace/package/src/Other.java");
+            ImmutableMap.of("/workspace/package/Hello.java", TargetInfoUtilities.javaLibrary(),
+            "/workspace/package/src/Other.java", TargetInfoUtilities.javaLibrary()));
 
     assertThat(actual.label()).matches(Pattern.compile("//package:JavaBuildRule\\w+"));
 
@@ -163,7 +163,7 @@ public class ProjectBuildRuleTest {
   @Test
   public void ruleWithFilesInMultipleDirectories() {
     ProjectBuildRule actual =
-        newBuildRule("/workspace/x/", "/workspace/x/foo/Foo.java", "/workspace/x/bar/Bar.java");
+        newBuildRule("/workspace/x/", ImmutableMap.of("/workspace/x/foo/Foo.java", TargetInfoUtilities.javaLibrary(), "/workspace/x/bar/Bar.java", TargetInfoUtilities.javaLibrary()));
 
     assertThat(actual.label()).matches("//x:JavaBuildRule\\w+");
 
@@ -175,13 +175,13 @@ public class ProjectBuildRuleTest {
         .matches("^add srcs bar/Bar\\.java foo/Foo\\.java\\|//x:JavaBuildRule\\w+");
   }
 
-  private static ProjectBuildRule newBuildRule(String packagePathString, String... srcFilePaths) {
+  private static ProjectBuildRule newBuildRule(String packagePathString, ImmutableMap<String, TargetInfo> srcToTargetInfo) {
     Path packagePath = Paths.get(packagePathString);
-    ImmutableSet<Path> srcFiles =
-        Arrays.stream(srcFilePaths)
-            .map(srcFile -> packagePath.resolve(srcFile))
-            .collect(toImmutableSet());
+    ImmutableMap.Builder<Path, TargetInfo> pathToTargetInfo = ImmutableMap.builder();
+    for (Map.Entry<String, TargetInfo> e : srcToTargetInfo.entrySet()) {
+      pathToTargetInfo.put(packagePath.resolve(e.getKey()), e.getValue());
+    }
 
-    return new ProjectBuildRule(srcFiles, packagePath, DEFAULT_WORKSPACE);
+    return new ProjectBuildRule(pathToTargetInfo.build(), packagePath, DEFAULT_WORKSPACE);
   }
 }

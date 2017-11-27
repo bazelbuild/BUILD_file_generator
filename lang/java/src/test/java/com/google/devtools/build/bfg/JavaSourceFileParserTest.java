@@ -92,12 +92,12 @@ public class JavaSourceFileParserTest {
             "com.hello.ClassA",
             "/src/com/hello/ClassA.java");
 
-    assertThat(parser.getFilesToRuleKind())
+    assertThat(parser.getFileToTargetInfo())
         .containsExactly(
             "/src/com/hello/Dummy.java",
-            "java_library",
+            TargetInfoUtilities.javaLibrary(),
             "/src/com/hello/ClassA.java",
-            "java_library");
+            TargetInfoUtilities.javaLibrary());
   }
 
   @Test
@@ -172,6 +172,7 @@ public class JavaSourceFileParserTest {
 
     ImmutableGraph<String> actual = parser.getClassToClass();
     MutableGraph<String> expected = newGraph();
+    expected.addNode("Dummy");
 
     assertThatGraphsEqual(actual, expected);
     assertThat(parser.getUnresolvedClassNames()).containsExactly("Foo");
@@ -271,11 +272,15 @@ public class JavaSourceFileParserTest {
     ImmutableGraph<String> actual = parser.getClassToClass();
 
     MutableGraph<String> expected = newGraph();
+    expected.addNode("x.A");
     expected.putEdge("y.A", "y.B");
     expected.putEdge("y.B", "y.A");
     expected.putEdge("z.A", "z.B");
     expected.putEdge("z.B", "z.C");
     expected.putEdge("z.C", "z.A");
+    expected.addNode("tests.A");
+    expected.addNode("tests.B");
+
     // Implicit: there's no tests.A and tests.B here, because 'tests/' is not in
     // oneRulePerPackageRoots.
 
@@ -319,16 +324,16 @@ public class JavaSourceFileParserTest {
             "}");
     JavaSourceFileParser parser = createParser(file1, file2, file3);
 
-    assertThat(parser.getFilesToRuleKind())
+    assertThat(parser.getFileToTargetInfo())
         .containsExactly(
             // Binary.java has a static method named 'main' with a single String[] parameter.
             "/src/x/Binary.java",
-            "java_binary",
+            TargetInfoUtilities.javaBinary("com.hello.Binary"),
             "/src/x/SomeTest.java",
-            "java_test",
+            TargetInfoUtilities.javaTest(),
             // AbstractTest is abstract, so must be a java_library.
             "/src/x/AbstractTest.java",
-            "java_library");
+            TargetInfoUtilities.javaLibrary());
   }
 
   private void createSourceFiles(String dir, String... filePaths) throws IOException {

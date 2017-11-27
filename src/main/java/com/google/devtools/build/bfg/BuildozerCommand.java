@@ -38,4 +38,8 @@ class BuildozerCommand {
   static String addAttribute(String attribute, Iterable<String> values, String target) {
     return String.format("add %s %s|%s", attribute, Joiner.on(" ").join(values), target);
   }
+
+  static String addFragment(String fragment, String target) {
+    return String.format("%s|%s", fragment, target);
+  }
 }

@@ -126,7 +126,7 @@ public class JavaSourceFileParserCli {
                     classname, Bfg.Strings.newBuilder().addElements(filename).build()));
 
     // fileToRuleKind
-    result.putAllFileToRuleKind(parser.getFilesToRuleKind());
+    result.putAllFileToTargetInfo(parser.getFileToTargetInfo());
     return result.build();
   }
 }
