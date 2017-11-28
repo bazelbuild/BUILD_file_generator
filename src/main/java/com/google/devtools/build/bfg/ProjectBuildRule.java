@@ -18,11 +18,13 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.hash.Hashing.farmHashFingerprint64;
 import static java.util.stream.Collectors.joining;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.google.common.hash.HashFunction;
 import java.nio.file.Path;
@@ -146,7 +148,8 @@ final class ProjectBuildRule implements BuildRule {
    * If none of those match, we error out (for now).
    * </ul>
    */
-  private static String guessRuleType(Collection<TargetInfo> targetInfos) {
+  @VisibleForTesting
+  static String guessRuleType(Collection<TargetInfo> targetInfos) {
     ImmutableSet<String> ruleKinds = ImmutableSet.copyOf(targetInfos.stream().map(ti -> ti.getRuleKind()).collect(Collectors.toSet()));
     if (ruleKinds.size() == 1) {
       return Iterables.getOnlyElement(ruleKinds);
@@ -161,6 +164,9 @@ final class ProjectBuildRule implements BuildRule {
     }
     if (ImmutableSet.of("library", "binary").equals(ruleKindSuffixes)) {
       return Iterables.getOnlyElement(ruleKindPrefixes) + "_binary";
+    }
+    if (ruleKindSuffixes.contains("image") && Sets.filter(ruleKindSuffixes, rk -> !ImmutableSet.of("binary", "library", "image").contains(rk)).isEmpty()) {
+      return Iterables.getOnlyElement(ruleKindPrefixes) + "_image";
     }
     throw new IllegalArgumentException("Unable to determine rule kind to use. targetInfos=" + targetInfos);
   }

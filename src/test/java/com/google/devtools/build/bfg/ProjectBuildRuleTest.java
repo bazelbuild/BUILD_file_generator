@@ -15,13 +15,17 @@
 package com.google.devtools.build.bfg;
 
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.fail;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -183,5 +187,36 @@ public class ProjectBuildRuleTest {
     }
 
     return new ProjectBuildRule(pathToTargetInfo.build(), packagePath, DEFAULT_WORKSPACE);
+  }
+
+  /** Tests the heuristics for determining the rule type from the targets in a connected component.
+   *
+   */
+  @Test
+  public void guessRuleTypeTest() {
+    for (String prefix: ImmutableSet.of("java", "py", "scala")) {
+      assertRuleType("binary", prefix, "library", "binary");
+      assertRuleType("test", prefix, "library", "test");
+      assertRuleType("image", prefix,  "library", "image");
+      assertRuleType("image", prefix, "library", "binary", "image");
+    }
+
+    assertRuleTypeFailure("java_test", "java_library", "java_binary", "java_image");
+    assertRuleTypeFailure("java_library", "py_library");
+  }
+
+  private void assertRuleType(String expectedRuleKind, String prefix, String... targetRuleKinds) {
+    List<TargetInfo> targets = Stream.of(targetRuleKinds).map(s -> TargetInfo.newBuilder().setRuleKind(prefix + "_" + s).build()).collect(Collectors.toList());
+    assertThat(ProjectBuildRule.guessRuleType(targets)).isEqualTo(prefix + "_" + expectedRuleKind);
+  }
+
+  private void assertRuleTypeFailure(String... targetRuleKinds) {
+    List<TargetInfo> targets = Stream.of(targetRuleKinds).map(s -> TargetInfo.newBuilder().setRuleKind(s).build()).collect(Collectors.toList());
+    try {
+      String expected = ProjectBuildRule.guessRuleType(targets);
+      fail(String.format("%s should not have been returned. Expected exception.", expected));
+    } catch (IllegalArgumentException iae) {
+      assertThat(iae).hasMessageThat().isNotEmpty();
+    }
   }
 }
