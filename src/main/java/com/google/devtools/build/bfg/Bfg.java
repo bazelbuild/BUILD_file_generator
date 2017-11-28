@@ -31,6 +31,7 @@ import com.google.common.graph.MutableGraph;
 import com.google.re2j.Pattern;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -41,6 +42,7 @@ import java.util.Map;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import protos.com.google.devtools.build.bfg.Bfg.ParserOutput;
+import protos.com.google.devtools.build.bfg.Bfg.TargetInfo;
 
 /** Entry point to the BUILD file generator. */
 public class Bfg {
@@ -90,6 +92,14 @@ public class Bfg {
   )
   private String externalResolvers = "";
 
+  @Option(
+      name = "--parser_output",
+      usage =
+          "File containing parser output serialized with bg.proto from a language-specific parser. "
+             + "If this is empty, Bfg will read parser output from stdin."
+  )
+  private String parserOutputFile = "";
+
   public static void main(String[] args) throws Exception {
     new Bfg().run(args);
   }
@@ -98,9 +108,16 @@ public class Bfg {
     CmdLineParser cmdLineParser = new CmdLineParser(this);
     cmdLineParser.parseArgument(args);
 
-    ParserOutput parserOutput = ParserOutput.parseFrom(System.in);
-    if (parserOutput.getClassToClassMap().isEmpty()) {
-      explainUsageErrorAndExit(cmdLineParser, "Expected nonempty class graph as input");
+    ParserOutput parserOutput;
+    if (!parserOutputFile.isEmpty()) {
+      try (FileInputStream fis = new FileInputStream(parserOutputFile)) {
+        parserOutput = ParserOutput.parseFrom(fis);
+      }
+    } else {
+      parserOutput = ParserOutput.parseFrom(System.in);
+    }
+    if (parserOutput.getClassToClassMap().isEmpty() && parserOutput.getClassToFileMap().isEmpty()) {
+      explainUsageErrorAndExit(cmdLineParser, "Expected nonempty class graph or class to file map as input");
     }
     if (whiteListRegex.isEmpty()) {
       explainUsageErrorAndExit(cmdLineParser, "The --whitelist flag is required.");
@@ -113,6 +130,7 @@ public class Bfg {
             protoMultimapToGraph(parserOutput.getClassToClassMap()), whiteList, blackList);
     ImmutableMap<String, Path> classToFiles =
         protoMultimapToPathsMap(parserOutput.getClassToFileMap());
+    ImmutableMap<Path, TargetInfo> pathToTargetInfo = fromProto(parserOutput.getFileToTargetInfoMap());
 
     Path workspace = Paths.get(workspacePath);
 
@@ -125,7 +143,7 @@ public class Bfg {
 
     ImmutableList.Builder<ClassToRuleResolver> resolvers =
         ImmutableList.<ClassToRuleResolver>builder()
-            .add(new ProjectClassToRuleResolver(classGraph, whiteList, classToFiles, workspace))
+            .add(new ProjectClassToRuleResolver(classGraph, pathToTargetInfo, whiteList, classToFiles, workspace))
             .add(new UserDefinedResolver(userDefinedMapping));
     for (String r : Splitter.on(',').omitEmptyStrings().split(externalResolvers)) {
       resolvers.add(new ExternalResolver(r));
@@ -135,6 +153,12 @@ public class Bfg {
         new GraphProcessor(classGraph).createBuildRuleDAG(resolvers.build());
 
     executeBuildozerCommands(buildRuleGraph, workspace, isDryRun, buildozerPath);
+  }
+
+  private ImmutableMap<Path, TargetInfo> fromProto(Map<String, TargetInfo> fileToTargetInfoMap) {
+    ImmutableMap.Builder fileToTargetInfo = ImmutableMap.builder();
+    fileToTargetInfoMap.forEach((k, v) -> fileToTargetInfo.put(Paths.get(k), v));
+    return fileToTargetInfo.build();
   }
 
   private ImmutableMap<String, Path> protoMultimapToPathsMap(
@@ -159,6 +183,7 @@ public class Bfg {
     MutableGraph<String> result = GraphBuilder.directed().build();
     m.forEach(
         (u, deps) -> {
+          result.addNode(u);
           for (String s : deps.getElementsList()) {
             result.putEdge(u, s);
           }
@@ -201,7 +226,7 @@ public class Bfg {
     try {
       Files.write(tempFile.toPath(), commands, StandardCharsets.US_ASCII);
       ProcessBuilder pb = new ProcessBuilder();
-      pb.command(buildozerBinary, "-f", tempFile.toPath().toString(), "-k");
+      pb.command(buildozerBinary, "-f", tempFile.toPath().toString(), "-root_dir", workspace.toFile().toString(), "-k");
       pb.environment().clear();
       Process p = pb.start();
       if (p.waitFor() != 0) {

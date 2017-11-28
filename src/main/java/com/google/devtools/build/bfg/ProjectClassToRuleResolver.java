@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import protos.com.google.devtools.build.bfg.Bfg.TargetInfo;
 
 /** Maps top level class names to rules. */
 class ProjectClassToRuleResolver implements ClassToRuleResolver {
@@ -39,6 +40,8 @@ class ProjectClassToRuleResolver implements ClassToRuleResolver {
   private final Logger logger = Logger.getLogger(ProjectBuildRule.class.getName());
 
   private final ImmutableGraph<String> classGraph;
+
+  private final ImmutableMap<Path, TargetInfo> pathToTargetInfo;
 
   private final Pattern whiteList;
 
@@ -52,11 +55,13 @@ class ProjectClassToRuleResolver implements ClassToRuleResolver {
 
   ProjectClassToRuleResolver(
       ImmutableGraph<String> classGraph,
+      ImmutableMap<Path, TargetInfo> pathToTargetInfo,
       Pattern whiteList,
       ImmutableMap<String, Path> classToFile,
       Path workspace) {
     checkNoInnerClassesPresent(classGraph.nodes());
     this.classToFile = classToFile;
+    this.pathToTargetInfo = pathToTargetInfo;
     this.workspace = workspace;
     this.classGraph = classGraph;
     this.whiteList = whiteList;
@@ -95,8 +100,12 @@ class ProjectClassToRuleResolver implements ClassToRuleResolver {
     Map<Path, BuildRule> srcToTargetMap = new HashMap<>();
     for (ImmutableSet<Path> component : componentDAG.nodes()) {
       Path buildFilePath = dirToBuildFileMap.get(component.iterator().next().getParent());
-      BuildRule rule = new ProjectBuildRule(component, buildFilePath, workspace);
-      component.stream().forEach(src -> srcToTargetMap.put(src, rule));
+      ImmutableMap<Path, TargetInfo> targetInfoForComponent = ImmutableMap.copyOf(Maps.filterEntries(pathToTargetInfo, e -> component.contains(e.getKey())));
+      if (component.size() != targetInfoForComponent.keySet().size()) {
+        throw new IllegalStateException(String.format("SCC contains paths={}. targetInfoForComponent={}."));
+      }
+      BuildRule rule = new ProjectBuildRule(targetInfoForComponent, buildFilePath, workspace);
+      component.forEach(src -> srcToTargetMap.put(src, rule));
     }
     ImmutableMap.Builder<String, BuildRule> classToBuildRuleMap = ImmutableMap.builder();
     for (String className : classGraph.nodes()) {

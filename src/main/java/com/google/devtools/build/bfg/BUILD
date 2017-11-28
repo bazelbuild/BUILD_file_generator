@@ -20,6 +20,7 @@ java_library(
         ":BuildRule",
         ":ClassToRuleResolver",
         ":StronglyConnectedComponents",
+        ":bfg_java_proto",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/re2j",
     ],
@@ -54,6 +55,7 @@ java_library(
     deps = [
         ":BuildozerCommand",
         ":StandardUnionFind",
+        ":bfg_java_proto",
         "//thirdparty/jvm/com/google/auto/value:auto_value",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/re2j",
@@ -129,5 +131,15 @@ proto_library(
 java_proto_library(
     name = "bfg_java_proto",
     deps = [":bfg_proto"],
+    visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "TargetInfoUtilities",
+    srcs = ["TargetInfoUtilities.java"],
+    deps = [
+        ":bfg_java_proto",
+        "//thirdparty/jvm/com/google/guava",            
+    ],
     visibility = ["//visibility:public"],
 )

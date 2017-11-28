@@ -21,6 +21,7 @@ import static com.google.devtools.build.bfg.BuildozerCommandCreator.getBuildFile
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import java.nio.file.Path;
@@ -171,7 +172,7 @@ public class BuildozerCommandCreatorTest {
     Path packagePath = Paths.get(packagePathStr);
     ImmutableSet<Path> srcFilePaths =
         Arrays.stream(srcFiles).map(src -> packagePath.resolve(src)).collect(toImmutableSet());
-
-    return new ProjectBuildRule(srcFilePaths, packagePath, DEFAULT_WORKSPACE);
+    // For these tests we can assume these are all java_library rules.
+    return new ProjectBuildRule(Maps.toMap(srcFilePaths, p -> TargetInfoUtilities.javaLibrary()), packagePath, DEFAULT_WORKSPACE);
   }
 }

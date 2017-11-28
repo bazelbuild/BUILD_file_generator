@@ -7,6 +7,7 @@ java_test(
         "//src/main/java/com/google/devtools/build/bfg:BuildRule",
         "//src/main/java/com/google/devtools/build/bfg:ClassToRuleResolver",
         "//src/main/java/com/google/devtools/build/bfg:GraphProcessor",
+        "//src/main/java/com/google/devtools/build/bfg:TargetInfoUtilities",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/truth",
         "//thirdparty/jvm/junit",
@@ -31,6 +32,8 @@ java_test(
     deps = [
         "//src/main/java/com/google/devtools/build/bfg:BuildRule",
         "//src/main/java/com/google/devtools/build/bfg:BuildozerCommandCreator",
+        "//src/main/java/com/google/devtools/build/bfg:TargetInfoUtilities",
+        "//src/main/java/com/google/devtools/build/bfg:bfg_java_proto",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/truth",
         "//thirdparty/jvm/junit",
@@ -41,7 +44,9 @@ java_test(
     name = "ProjectBuildRuleTest",
     srcs = ["ProjectBuildRuleTest.java"],
     deps = [
+        "//src/main/java/com/google/devtools/build/bfg:bfg_java_proto",
         "//src/main/java/com/google/devtools/build/bfg:BuildRule",
+        "//src/main/java/com/google/devtools/build/bfg:TargetInfoUtilities",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/truth",
         "//thirdparty/jvm/junit",
@@ -64,8 +69,10 @@ java_test(
     name = "ProjectClassToRuleResolverTest",
     srcs = ["ProjectClassToRuleResolverTest.java"],
     deps = [
+        "//src/main/java/com/google/devtools/build/bfg:bfg_java_proto",
         "//src/main/java/com/google/devtools/build/bfg:BuildRule",
         "//src/main/java/com/google/devtools/build/bfg:GraphProcessor",
+        "//src/main/java/com/google/devtools/build/bfg:TargetInfoUtilities",                 
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/jimfs",
         "//thirdparty/jvm/com/google/re2j",
@@ -119,4 +126,3 @@ java_test(
         "//thirdparty/jvm/junit",
     ],
 )
-

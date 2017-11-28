@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
@@ -218,6 +219,7 @@ public class GraphProcessorTest {
     Path packagePath = WORKSPACE_DEFAULT.resolve(packagePathString);
     Path[] srcFilePaths =
         Arrays.stream(srcFiles).map(srcFile -> packagePath.resolve(srcFile)).toArray(Path[]::new);
-    return new ProjectBuildRule(ImmutableSet.copyOf(srcFilePaths), packagePath, WORKSPACE_DEFAULT);
+    // For these tests we can assume these are all java_library rules.
+    return new ProjectBuildRule(Maps.toMap(ImmutableSet.copyOf(srcFilePaths), p -> TargetInfoUtilities.javaLibrary()), packagePath, WORKSPACE_DEFAULT);
   }
 }

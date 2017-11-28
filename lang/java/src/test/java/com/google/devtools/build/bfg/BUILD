@@ -20,6 +20,7 @@ java_test(
     deps = [
         "//lang/java/src/main/java/com/google/devtools/build/bfg:JavaSourceFileParser",
         "//lang/java/src/main/java/com/google/devtools/build/bfg:ReferencedClassesParser",
+        "//src/main/java/com/google/devtools/build/bfg:TargetInfoUtilities",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/jimfs",
         "//thirdparty/jvm/com/google/truth",
