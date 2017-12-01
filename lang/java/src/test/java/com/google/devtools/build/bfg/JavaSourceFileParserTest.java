@@ -172,6 +172,7 @@ public class JavaSourceFileParserTest {
 
     ImmutableGraph<String> actual = parser.getClassToClass();
     MutableGraph<String> expected = newGraph();
+    expected.addNode("Dummy");
 
     assertThatGraphsEqual(actual, expected);
     assertThat(parser.getUnresolvedClassNames()).containsExactly("Foo");
@@ -271,13 +272,14 @@ public class JavaSourceFileParserTest {
     ImmutableGraph<String> actual = parser.getClassToClass();
 
     MutableGraph<String> expected = newGraph();
+    expected.addNode("x.A");
     expected.putEdge("y.A", "y.B");
     expected.putEdge("y.B", "y.A");
     expected.putEdge("z.A", "z.B");
     expected.putEdge("z.B", "z.C");
     expected.putEdge("z.C", "z.A");
-    // Implicit: there's no tests.A and tests.B here, because 'tests/' is not in
-    // oneRulePerPackageRoots.
+    expected.addNode("tests.A");
+    expected.addNode("tests.B");
 
     assertThatGraphsEqual(actual, expected);
   }

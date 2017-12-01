@@ -189,6 +189,7 @@ public class JavaSourceFileParser {
 
       boolean hasEdges = false;
       classToFile.put(qualifiedSrc, srcFilePath.toString());
+      classToClass.addNode(qualifiedSrc);
       for (QualifiedName qualifiedDst : parser.qualifiedTopLevelNames) {
         if (!qualifiedSrc.equals(qualifiedDst.value())) {
           classToClass.putEdge(qualifiedSrc, qualifiedDst.value());
