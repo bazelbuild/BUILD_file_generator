@@ -175,6 +175,7 @@ public class Bfg {
     }
   }
 
+  //TODO(bazel-devel): actually print what the intended usage is.
   private static void explainUsageErrorAndExit(CmdLineParser cmdLineParser, String message) {
     System.err.println(message);
     cmdLineParser.printUsage(System.err);

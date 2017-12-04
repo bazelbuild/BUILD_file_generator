@@ -76,13 +76,9 @@ java_library(
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/re2j",
     ],
-)
-
-java_binary(
-    name = "bfg",
-    main_class = "com.google.devtools.build.bfg.Bfg",
-    stamp = 1,
-    runtime_deps = [":Bfg"],
+    visibility = [
+        "//src:__subpackages__",
+    ],
 )
 
 java_library(

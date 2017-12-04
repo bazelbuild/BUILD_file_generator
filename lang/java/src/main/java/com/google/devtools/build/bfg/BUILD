@@ -30,10 +30,6 @@ java_library(
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/org/eclipse/jdt:org_eclipse_jdt_core",
     ],
+    visibility = ["//lang:__subpackages__"],
 )
 
-java_binary(
-    name = "JavaSourceFileParserCli",
-    main_class = "com.google.devtools.build.bfg.JavaSourceFileParserCli",
-    runtime_deps = [":JavaSourceFileParser"],
-)
