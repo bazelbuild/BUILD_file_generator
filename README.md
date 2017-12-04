@@ -1,4 +1,4 @@
-[![Build Status](http://ci.bazel.io/buildStatus/icon?job=BUILD_file_generator)](http://ci.bazel.io/job/BUILD_file_generator)
+[![Build Status](https://ci.bazel.io/buildStatus/icon?job=BUILD_file_generator)](https://ci.bazel.io/job/BUILD_file_generator)
 
 # BUILD File Generator (BFG)
 

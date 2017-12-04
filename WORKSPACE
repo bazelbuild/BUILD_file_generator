@@ -10,7 +10,7 @@ http_archive(
     urls = ["https://github.com/google/protobuf/releases/download/v3.4.1/protobuf-java-3.4.1.zip"],
 )
 
-rules_scala_version = "8447da88d74737fa19111422554c9d11076ea9a3"  # update this as needed
+rules_scala_version = "388a2585f45dff804d006b0e81e1b1a1c60578bc"  # update this as needed
 
 http_archive(
     name = "io_bazel_rules_scala",
