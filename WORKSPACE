@@ -10,7 +10,7 @@ http_archive(
     urls = ["https://github.com/google/protobuf/releases/download/v3.4.1/protobuf-java-3.4.1.zip"],
 )
 
-rules_scala_version = "388a2585f45dff804d006b0e81e1b1a1c60578bc"  # update this as needed
+rules_scala_version = "25d68d43ff617e073e57ed2654ee9b30a568a0e6"  # update this as needed
 
 http_archive(
     name = "io_bazel_rules_scala",
@@ -24,3 +24,6 @@ scala_repositories()
 
 load("@io_bazel_rules_scala//scala_proto:scala_proto.bzl", "scala_proto_repositories")
 scala_proto_repositories()
+
+load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
+scala_register_toolchains()
