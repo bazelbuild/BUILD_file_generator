@@ -1,4 +1,4 @@
-[![Build Status](https://ci.bazel.io/buildStatus/icon?job=BUILD_file_generator)](https://ci.bazel.io/job/BUILD_file_generator)
+[![Build status](https://badge.buildkite.com/dc74310b2f9cdc853c66d97edf96cbc5e455963daddc603a48.svg)](https://buildkite.com/bazel/build-file-generator-postsubmit)
 
 # BUILD File Generator
 
