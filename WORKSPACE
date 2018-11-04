@@ -1,16 +1,18 @@
 load("//thirdparty:workspace.bzl", "maven_dependencies")
-load("//tools/bazel_defs:declare_maven.bzl", "declare_maven")
-maven_dependencies(declare_maven)
+maven_dependencies()
 
-# Provide dependencies for proto_library and java_proto_library rules.
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# LICENSE: The Apache Software License, Version 2.0
+# proto_library rules implicitly depend on @com_google_protobuf//:protoc
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "091e1aa2b64ea6d512ff9294ecc9da95132c3b961a8fb39a3bab3929e5122f50",
-    strip_prefix = "protobuf-3.4.1",
-    urls = ["https://github.com/google/protobuf/releases/download/v3.4.1/protobuf-java-3.4.1.zip"],
+    sha256 = "d7a221b3d4fb4f05b7473795ccea9e05dab3b8721f6286a95fffbffc2d926f8b",
+    strip_prefix = "protobuf-3.6.1",
+    urls = ["https://github.com/google/protobuf/archive/v3.6.1.zip"],
 )
 
-rules_scala_version = "5874a2441596fe9a0bf80e167a4d7edd945c221e"  # update this as needed
+rules_scala_version = "4be50865a332aef46c46c94b345c320c3353e9e1"  # HEAD on 11-1-2018. update this as needed.
 
 http_archive(
     name = "io_bazel_rules_scala",
