@@ -2,6 +2,7 @@ load("//thirdparty:workspace.bzl", "maven_dependencies")
 load("//tools/bazel_defs:declare_maven.bzl", "declare_maven")
 maven_dependencies(declare_maven)
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # Provide dependencies for proto_library and java_proto_library rules.
 http_archive(
     name = "com_google_protobuf",
