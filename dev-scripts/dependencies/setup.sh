@@ -6,7 +6,7 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 BAZEL_DEPS_DIR="$ROOT_DIR/../bazel-deps"
 # Pin a specific version of bazel-deps; change this to upgrade:
-BAZEL_DEPS_VERSION="aad33e40cd2ce2400347e5db28b767e5d512a4fd"
+BAZEL_DEPS_VERSION="1af8921d52f053fad575f26762533a3823b4a847"
 
 if [ -d "$BAZEL_DEPS_DIR" ]
 then
