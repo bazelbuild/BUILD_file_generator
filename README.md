@@ -10,6 +10,8 @@ BUILD File Generator generates Bazel BUILD files for Java code.
 
 ### Why is it useful?
 
+Test.
+
 Having all sources in a single BUILD rule doesn't allow Bazel to parallelize and
 cache builds. In order to fully benefit from Bazel, one must write multiple
 BUILD rules and connect them.
