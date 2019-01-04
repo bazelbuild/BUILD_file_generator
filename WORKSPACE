@@ -6,12 +6,12 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # Provide dependencies for proto_library and java_proto_library rules.
 http_archive(
     name = "com_google_protobuf",
-    sha256 = "2244b0308846bb22b4ff0bcc675e99290ff9f1115553ae9671eba1030af31bc0",
-    strip_prefix = "protobuf-3.6.1.2",
-    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.6.1.2.tar.gz"],
+    sha256 = "73fdad358857e120fd0fa19e071a96e15c0f23bb25f85d3f7009abfd4f264a2a",
+    strip_prefix = "protobuf-3.6.1.3",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.6.1.3.tar.gz"],
 )
 
-rules_scala_version = "5874a2441596fe9a0bf80e167a4d7edd945c221e"  # update this as needed
+rules_scala_version = "326b4ce252c36aeff2232e241ff4bfd8d6f6e071"  # update this as needed
 
 http_archive(
     name = "io_bazel_rules_scala",
