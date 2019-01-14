@@ -11,7 +11,7 @@ http_archive(
     urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.6.1.3.tar.gz"],
 )
 
-rules_scala_version = "326b4ce252c36aeff2232e241ff4bfd8d6f6e071"  # update this as needed
+rules_scala_version = "1354d935a74395b3f0870dd90a04e0376fe22587"  # update this as needed
 
 http_archive(
     name = "io_bazel_rules_scala",
