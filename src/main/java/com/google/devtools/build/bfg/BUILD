@@ -55,6 +55,7 @@ java_library(
         ":BuildozerCommand",
         ":StandardUnionFind",
         "//thirdparty/jvm/com/google/auto/value:auto_value",
+        "//thirdparty/jvm/com/google/auto/value:auto_value_annotations",
         "//thirdparty/jvm/com/google/guava",
         "//thirdparty/jvm/com/google/re2j",
     ],

@@ -5,8 +5,7 @@ set -euo pipefail
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 ROOT_DIR=$(cd "${SCRIPT_DIR}/../.." && pwd)
 BAZEL_DEPS_DIR="$ROOT_DIR/../bazel-deps"
-# Pin a specific version of bazel-deps; change this to upgrade:
-BAZEL_DEPS_VERSION="aad33e40cd2ce2400347e5db28b767e5d512a4fd"
+BAZEL_DEPS_VERSION="a53246efd3bcabc1362c830f53b6ac4818871b12" # master as of 2019-03-12
 
 if [ -d "$BAZEL_DEPS_DIR" ]
 then
