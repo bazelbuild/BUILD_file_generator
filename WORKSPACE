@@ -1,6 +1,8 @@
+workspace(name = "build_file_generator")
+
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//thirdparty:workspace.bzl", "maven_dependencies")
-load("//tools/bazel_defs:declare_maven.bzl", "declare_maven")
-maven_dependencies(declare_maven)
+maven_dependencies()
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # Provide dependencies for proto_library and java_proto_library rules.
@@ -11,7 +13,7 @@ http_archive(
     urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.6.1.3.tar.gz"],
 )
 
-rules_scala_version = "1354d935a74395b3f0870dd90a04e0376fe22587"  # update this as needed
+rules_scala_version = "7bc18d07001cbfd425c6761c8384c4e982d25a2b"  # master as of 2019-03-12
 
 http_archive(
     name = "io_bazel_rules_scala",
@@ -28,3 +30,5 @@ scala_proto_repositories()
 
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
 scala_register_toolchains()
+
+register_toolchains("//lang/scala/src/main/scala/com/google/devtools/build/bfg/scala:scalapb_toolchain")

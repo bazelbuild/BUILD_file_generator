@@ -10,6 +10,7 @@ java_library(
     srcs = ["ReferencedClassesParser.java"],
     deps = [
         "//thirdparty/jvm/com/google/auto/value:auto_value",
+        "//thirdparty/jvm/com/google/auto/value:auto_value_annotations",
         "//thirdparty/jvm/com/google/code/findbugs:jsr305",
         "//thirdparty/jvm/com/google/errorprone:error_prone_annotations",
         "//thirdparty/jvm/com/google/guava",

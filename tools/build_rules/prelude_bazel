@@ -1,3 +1,8 @@
+# Bazel appends this file to the start of every BUILD.bazel file.
+
+# Replace java_library with our wrapper macro everywhere.  See https://github.com/bazelbuild/bazel/issues/1612 for why
+# the leading "@" is required on the label.
 load("@//tools/bazel_defs:java.bzl", "java_library")
+
 # TODO(https://github.com/johnynek/bazel-deps/issues/86): Remove once bazel-deps generates load() statements where needed.
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_test")
