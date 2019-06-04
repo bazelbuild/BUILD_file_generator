@@ -1,5 +1,7 @@
 [![Build status](https://badge.buildkite.com/dc74310b2f9cdc853c66d97edf96cbc5e455963daddc603a48.svg)](https://buildkite.com/bazel/build-file-generator-postsubmit)
 
+**NOTE: This project is deprecated and no longer maintained.**
+
 # BUILD File Generator
 
 BUILD File Generator generates Bazel BUILD files for Java code.
