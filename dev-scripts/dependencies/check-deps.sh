@@ -2,25 +2,17 @@
 #
 # Wrapper script around bazel-deps to generate third_party files, and check if they differ from what's at HEAD.  Exits 0
 # if they match, non-zero otherwise.
-# TODO(https://github.com/johnynek/bazel-deps/issues/85): Drop once issue is fixed.
+# TODO(https://github.com/johnynek/bazel-deps/issues/62): check-deps.sh can be used in CI once fixed. Without this fix,
+# the check falsely claims thirdparty/jvm/com/google/auto/value/BUILD is not up to date.
 
 set -eu
 
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-hash_of_third_party_files() {
-    find thirdparty -type f | sort | xargs sha1sum
-}
-
-BEFORE=$(hash_of_third_party_files)
-
 # shellcheck disable=SC1090
-"$SCRIPT_DIR/generate.sh"
+. "$SCRIPT_DIR/setup.sh"
 
-AFTER=$(hash_of_third_party_files)
-
-# Fail if the generated files don't match what's committed.
-if ! diff -u <(echo "$BEFORE") <(echo "$AFTER")
+if ! "$BAZEL_DEPS_DIR/gen_maven_deps.sh" generate --check-only --buildifier buildifier --repo-root "${ROOT_DIR}" --sha-file thirdparty/workspace.bzl --deps maven_deps.yaml
 then
     echo
     echo "* * *"
@@ -28,8 +20,4 @@ then
     echo "* * *"
     echo
     exit 2
-else
-    echo
-    echo "Generated dependency files are up to date."
-    echo
 fi
